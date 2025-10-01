@@ -7,23 +7,25 @@
   <title>Prestsbakki Weather Dashboard</title>
   <link rel="manifest" href="manifest.webmanifest">
   <style>
-    body{margin:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#fafafa}
-    .wx{max-width:1100px;margin:auto;padding:16px;color:#111}
-    h1{margin:0 0 6px;font-size:20px}
-    .sub{font-size:12px;color:#666;margin:0 0 14px}
+    body{margin:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#f0f8ff}
+    .wx{max-width:1200px;margin:auto;padding:16px;color:#111}
+    h1{margin:0 0 6px;font-size:20px;color:#0a4d8c}
+    .sub{font-size:12px;color:#555;margin:0 0 14px}
     .tabs{display:flex;gap:8px;margin:8px 0 14px;flex-wrap:wrap}
-    .tab{padding:8px 12px;border:1px solid #ddd;border-radius:999px;cursor:pointer;font-size:12px}
+    .tab{padding:8px 12px;border:1px solid #0ea5e9;border-radius:999px;cursor:pointer;font-size:12px;color:#0a4d8c}
     input[type=radio]{display:none}
     .page{display:none}
     #p1:checked ~ .pages #pg1,#p2:checked ~ .pages #pg2,#p3:checked ~ .pages #pg3,#p4:checked ~ .pages #pg4,#p5:checked ~ .pages #pg5{display:block}
-    #p1:checked ~ .tabs label[for=p1],#p2:checked ~ .tabs label[for=p2],#p3:checked ~ .tabs label[for=p3],#p4:checked ~ .tabs label[for=p4],#p5:checked ~ .tabs label[for=p5]{background:#eee}
+    #p1:checked ~ .tabs label[for=p1],#p2:checked ~ .tabs label[for=p2],#p3:checked ~ .tabs label[for=p3],#p4:checked ~ .tabs label[for=p4],#p5:checked ~ .tabs label[for=p5]{background:#0ea5e9;color:#fff}
     .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
     @media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
-    .card{background:#fff;border:1px solid #ddd;border-radius:14px;padding:12px}
-    .k{font-size:12px;color:#666;margin-bottom:6px}
-    .v{font-size:22px;font-weight:700}
-    .note{font-size:11px;color:#666;margin-top:6px}
-    .pill{padding:4px 8px;border-radius:999px;font-size:11px;border:1px solid #ddd;margin:2px}
+    .card{background:#fff;border:1px solid #cce4f6;border-radius:14px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+    .k{font-size:12px;color:#0a4d8c;margin-bottom:6px}
+    .v{font-size:22px;font-weight:700;color:#034078}
+    .note{font-size:11px;color:#555;margin-top:6px}
+    .bar{height:8px;background:#e0f0fb;border-radius:999px;overflow:hidden;margin-top:6px}
+    .fill{height:100%;background:#0ea5e9;width:0%}
+    .pill{padding:4px 8px;border-radius:999px;font-size:11px;border:1px solid #cce4f6;margin:2px}
     .ok{background:#e6fbe6;border-color:#cceccc}
     .warn{background:#fff7e0;border-color:#ffecb3}
     .bad{background:#fde2e1;border-color:#fbb}
@@ -44,7 +46,7 @@
     <label class="tab" for="p1">Yfirlit</label>
     <label class="tab" for="p2">Vindur</label>
     <label class="tab" for="p3">Hiti &amp; Raki</label>
-    <label class="tab" for="p4">Inni</label>
+    <label class="tab" for="p4">Aðrar mælingar</label>
     <label class="tab" for="p5">Aðvaranir</label>
   </div>
 
@@ -52,61 +54,62 @@
     <div id="pg1" class="page"><div class="grid" id="overview"></div></div>
     <div id="pg2" class="page"><div class="grid" id="wind"></div></div>
     <div id="pg3" class="page"><div class="grid" id="temp"></div></div>
-    <div id="pg4" class="page"><div class="grid" id="inside"></div></div>
+    <div id="pg4" class="page"><div class="grid" id="extra"></div></div>
     <div id="pg5" class="page"><div id="alerts"></div></div>
   </div>
 </div>
 
 <script>
-  // 🔗 Þinn Google Sheets CSV linkur
   const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRUcwYyuBJGhs-FjH19RdCEeGw_KNulQvK1VOXjDIPHaVDFmJ4lom0b6IIbvPIhCe6uV9qREXqGAkJE/pub?output=csv";
 
   async function loadData(){
     const res = await fetch(CSV_URL);
     const text = await res.text();
     const rows = text.trim().split("\n").map(r=>r.split(","));
-    const headers = rows[0];
-    const values = rows[1];
+    const h = rows[0], v = rows[1];
     const d = {};
-    headers.forEach((h,i)=> d[h.trim()] = parseFloat(values[i]) || values[i]);
+    h.forEach((name,i)=> d[name.trim()] = v[i]);
     return d;
   }
 
-  function card(k,v,note=""){ return `<div class="card"><div class="k">${k}</div><div class="v">${v}</div>${note?`<div class="note">${note}</div>`:""}</div>`; }
+  function card(k,v,note=""){return `<div class="card"><div class="k">${k}</div><div class="v">${v}</div>${note?`<div class="note">${note}</div>`:""}</div>`;}
 
   function render(d){
-    document.getElementById("timestamp").textContent = "Síðast uppfært: " + d.timestamp;
+    document.getElementById("timestamp").textContent = "Síðast uppfært: " + d["Date (Atlantic/Reykjavik)"];
+
+    // Yfirlit
     document.getElementById("overview").innerHTML =
-      card("Vindhraði (nú)", d.windNow+" m/s", "Meðalvindur "+d.windAvg+" m/s") +
-      card("Hviður (mest)", d.gustMax+" m/s") +
-      card("Hitastig (nú)", d.tempNow+" °C", "Lág/Há "+d.tMin+" / "+d.tMax) +
-      card("Vindkæling", d.chillNow+" °C") +
-      card("Daggarmark", d.dewNow+" °C") +
-      card("Hitavísir", d.heatIndex+" °C") +
-      card("Rakastig", d.humNow+" %") +
-      card("Innihiti", d.inTemp+" °C");
+      card("Hitastig (úti)", d["Temperature (°C)"]+" °C") +
+      card("Rakastig", d["Humidity (%)"]+" %") +
+      card("Vindhraði (meðal)", d["Average wind speed (m/s)"]+" m/s") +
+      card("Loftþrýstingur", d["Atmospheric pressure (hPa)"]+" hPa");
 
+    // Vindur
     document.getElementById("wind").innerHTML =
-      card("Meðalvindur", d.windAvg+" m/s") +
-      card("Vindhraði (nú)", d.windNow+" m/s") +
-      card("Hviður (nú)", d.gustNow+" m/s") +
-      card("Hviður (mest)", d.gustMax+" m/s");
+      card("Vindhraði (meðal)", d["Average wind speed (m/s)"]+" m/s") +
+      card("Vindátt", d["Average wind direction (°)"]+" °") +
+      card("Hviður", d["Gust of wind (m/s)"]+" m/s");
 
+    // Hiti & Raki
     document.getElementById("temp").innerHTML =
-      card("Hitastig (nú)", d.tempNow+" °C", "Lág/Há "+d.tMin+" / "+d.tMax) +
-      card("Vindkæling", d.chillNow+" °C") +
-      card("Daggarmark", d.dewNow+" °C") +
-      card("Hitavísir", d.heatIndex+" °C") +
-      card("Rakastig", d.humNow+" %");
+      card("Hitastig (úti)", d["Temperature (°C)"]+" °C", "Vindkæling "+d["Wind chill (°C)"]+" °C") +
+      card("Daggarmark", d["Dew point (°C)"]+" °C") +
+      card("Hitavísir", d["Heat index (°C)"]+" °C") +
+      card("Innihiti", d["Inside temperature (°C)"]+" °C") +
+      card("Innirkaki", d["Inside humidity (%)"]+" %");
 
-    document.getElementById("inside").innerHTML =
-      card("Innihiti", d.inTemp+" °C") +
-      card("Innirkaki", d.inHum+" %");
+    // Aðrar mælingar
+    document.getElementById("extra").innerHTML =
+      card("Útfellingar (regn)", d["Rain (mm)"]+" mm", "Rigningartíðni "+d["Rain rate (mm/h)"]+" mm/h") +
+      card("Uppgufun", d["Evapotranspiration (mm)"]+" mm") +
+      card("Sólargeislun", d["Solar radiation (W/m²)"]+" W/m²") +
+      card("UV vísitala", d["UV index"]);
 
+    // Aðvaranir
     const alerts = [];
-    if (d.gustNow >= 20) alerts.push(`<div class="pill bad">Háar hviður ≥20 m/s</div>`);
-    if (d.chillNow <= -5) alerts.push(`<div class="pill warn">Vindkæling ≤-5 °C</div>`);
-    if (d.heatIndex >= 27) alerts.push(`<div class="pill warn">Hitavísir ≥27 °C</div>`);
+    if (parseFloat(d["Gust of wind (m/s)"]) >= 20) alerts.push(`<div class="pill bad">Háar hviður ≥20 m/s</div>`);
+    if (parseFloat(d["Wind chill (°C)"]) <= -5) alerts.push(`<div class="pill warn">Vindkæling ≤ -5 °C</div>`);
+    if (parseFloat(d["Heat index (°C)"]) >= 27) alerts.push(`<div class="pill warn">Hitavísir ≥ 27 °C</div>`);
     document.getElementById("alerts").innerHTML = alerts.join(" ") || "<div class='pill ok'>Engar aðvaranir</div>";
   }
 
