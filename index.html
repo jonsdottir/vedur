@@ -9,7 +9,7 @@
   <style>
     :root{--blue:#0ea5e9;--blue-700:#0369a1;--blue-50:#e0f2fe;--card:#fff;--line:#cce4f6;--text:#0a4d8c}
     body{margin:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#f0f8ff}
-    .wx{max-width:1200px;margin:auto;padding:16px;color:#111}
+    .wx{max-width:1250px;margin:auto;padding:16px;color:#111}
     h1{margin:0 0 6px;font-size:22px;color:var(--blue-700)}
     .sub{font-size:12px;color:#555;margin:0 0 14px}
     .tabs{display:flex;gap:8px;margin:8px 0 14px;flex-wrap:wrap}
@@ -18,8 +18,10 @@
     .page{display:none}
     #p1:checked ~ .pages #pg1,#p2:checked ~ .pages #pg2,#p3:checked ~ .pages #pg3,#p4:checked ~ .pages #pg4,#p5:checked ~ .pages #pg5{display:block}
     #p1:checked ~ .tabs label[for=p1],#p2:checked ~ .tabs label[for=p2],#p3:checked ~ .tabs label[for=p3],#p4:checked ~ .tabs label[for=p4],#p5:checked ~ .tabs label[for=p5]{background:var(--blue);color:#fff}
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 14px}
+    .controls select,.controls input{padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:#fff}
     .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-    @media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:980px){.grid{grid-template-columns:repeat(2,1fr)}}
     .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
     .k{font-size:12px;color:var(--text);margin-bottom:6px}
     .v{font-size:22px;font-weight:700;color:#034078}
@@ -30,12 +32,32 @@
     .bad{background:#fde2e1;border-color:#fbb}
     .bar{height:8px;background:var(--blue-50);border-radius:999px;overflow:hidden;margin-top:6px}
     .fill{height:100%;background:var(--blue);width:0%}
+    canvas{width:100%;height:260px;border:1px solid var(--line);border-radius:12px;background:#fff}
   </style>
 </head>
 <body>
 <div class="wx">
   <h1>Weathercloud Prestsbakki — Dashboard</h1>
   <div class="sub" id="timestamp">Hleð gögnum...</div>
+
+  <!-- Síur -->
+  <div class="controls">
+    <label>Ár:
+      <select id="yearSel"></select>
+    </label>
+    <label>Mánuður:
+      <select id="monthSel">
+        <option value="">Allir</option>
+        <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
+        <option value="4">Apr</option><option value="5">Maí</option><option value="6">Jún</option>
+        <option value="7">Júl</option><option value="8">Ágú</option><option value="9">Sep</option>
+        <option value="10">Okt</option><option value="11">Nóv</option><option value="12">Des</option>
+      </select>
+    </label>
+    <label>Dagur:
+      <input type="date" id="daySel">
+    </label>
+  </div>
 
   <input type="radio" id="p1" name="tab" checked>
   <input type="radio" id="p2" name="tab">
@@ -48,7 +70,7 @@
     <label class="tab" for="p2">Vindur</label>
     <label class="tab" for="p3">Hiti &amp; Raki</label>
     <label class="tab" for="p4">Aðrar mælingar</label>
-    <label class="tab" for="p5">Aðvaranir</label>
+    <label class="tab" for="p5">Línurit</label>
   </div>
 
   <div class="pages">
@@ -56,15 +78,21 @@
     <div id="pg2" class="page"><div class="grid" id="wind"></div></div>
     <div id="pg3" class="page"><div class="grid" id="temp"></div></div>
     <div id="pg4" class="page"><div class="grid" id="extra"></div></div>
-    <div id="pg5" class="page"><div id="alerts"></div></div>
+    <div id="pg5" class="page">
+      <div class="card">
+        <div class="k">Hitastig yfir valið tímabil</div>
+        <canvas id="chart"></canvas>
+        <div class="note" id="rangeNote"></div>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-  // Þinn Google Sheets CSV hlekkur
+  // ---- STILLTU ÞESSU Á ÞINN GOOGLE SHEETS CSV HLEKK ----
   const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRUcwYyuBJGhs-FjH19RdCEeGw_KNulQvK1VOXjDIPHaVDFmJ4lom0b6IIbvPIhCe6uV9qREXqGAkJE/pub?output=csv";
 
-  // CSV parser sem virðir gæsalappir og normalíserar heiti
+  // CSV parser sem virðir gæsalappir
   function parseCSV(text){
     const rows = [];
     let cur = [], cell = "", inQ = false;
@@ -73,116 +101,227 @@
       if (inQ){
         if (ch === '"' && nx === '"'){ cell += '"'; i++; }
         else if (ch === '"'){ inQ = false; }
-        else { cell += ch; }
+        else cell += ch;
       } else {
-        if (ch === '"'){ inQ = true; }
+        if (ch === '"') inQ = true;
         else if (ch === ','){ cur.push(cell); cell = ""; }
         else if (ch === '\n'){ cur.push(cell); rows.push(cur); cur = []; cell = ""; }
-        else if (ch === '\r'){ /* skip */ }
-        else { cell += ch; }
+        else if (ch !== '\r') cell += ch;
       }
     }
-    if (cell.length || cur.length) { cur.push(cell); rows.push(cur); }
+    if (cell.length || cur.length){ cur.push(cell); rows.push(cur); }
     return rows.filter(r => r.some(x => (x||"").trim() !== ""));
   }
-  const norm = s => (s||"").replace(/\u00A0/g," ").replace(/\s+/g," ").trim(); // fjarlægir NBSP o.fl.
-  const toNum = v => {
-    if (v==null) return null;
-    const s = String(v).trim();
-    if (s==="") return null;
-    // styður bæði 14,7 og 14.7
-    const n = parseFloat(s.replace(/\s/g,"").replace(",","."));
-    return isNaN(n) ? null : n;
-  };
 
-  async function loadData(){
+  // Normalíserar bil/NBSP
+  const norm = s => (s||"").replace(/\u00A0/g," ").replace(/\s+/g," ").trim();
+
+  // Talan: styður "14,7", "14.7", og "1,006" (þúsundaaðskilnaður)
+  function toNumSmart(v){
+    if (v==null) return null;
+    let s = String(v).trim().replace(/\s/g,"");
+    if (s==="") return null;
+    // Ef aðeins eitt skil-einkenni og þrír stafir á eftir => líklega þúsundir: fjarlægja
+    if ((s.match(/,|\./g)||[]).length === 1){
+      const idx = s.search(/[,.]/);
+      if (idx >= 0 && s.length-idx-1 === 3) s = s.replace(/[,.]/g,"");
+    } else {
+      // Ef bæði komma og punktur: notum síðasta sem tugabrot, hina fjarlægjum
+      const lastSep = Math.max(s.lastIndexOf(','), s.lastIndexOf('.'));
+      const dec = s[lastSep];
+      s = s.replace(/[,.]/g, ch => ch===dec ? '.' : '');
+    }
+    // Ef bara komma eftir: skiptum í punkt
+    s = s.replace(',', '.');
+    const n = parseFloat(s);
+    return isNaN(n) ? null : n;
+  }
+
+  // Dagsetning: "dd/mm/yyyy hh:mm"
+  function parseISDate(s){
+    const t = norm(s).split(' ');
+    const [d,m,y] = t[0].split('/').map(x=>parseInt(x,10));
+    const [H,Min] = (t[1]||"0:00").split(':').map(x=>parseInt(x,10));
+    return new Date(y, m-1, d, H, Min, 0);
+  }
+
+  async function loadAll(){
     const res = await fetch(CSV_URL);
     if (!res.ok) throw new Error("Gat ekki sótt CSV");
     const text = await res.text();
     const rows = parseCSV(text);
     const headers = rows[0].map(norm);
-    // síðasta fyllta lína
-    const last = [...rows].reverse().find(r => r.some(x => norm(x) !== "")) || rows[1];
-    const obj = {};
-    headers.forEach((h,i)=> obj[h] = last[i] ?? "");
-    return obj;
+    const idx = Object.fromEntries(headers.map((h,i)=>[h,i]));
+    const H = {
+      ts: "Date (Atlantic/Reykjavik)",
+      inTemp: "Inside temperature (°C)",
+      temp: "Temperature (°C)",
+      chill: "Wind chill (°C)",
+      inDew: "Inside dew point (°C)",
+      dew: "Dew point (°C)",
+      inHeat: "Inside heat index (°C)",
+      heat: "Heat index (°C)",
+      inHum: "Inside humidity (%)",
+      hum: "Humidity (%)",
+      gust: "Gust of wind (m/s)",
+      wind: "Average wind speed (m/s)",
+      windDir: "Average wind direction (°)",
+      press: "Atmospheric pressure (hPa)",
+      rain: "Rain (mm)",
+      evapo: "Evapotranspiration (mm)",
+      rainRate: "Rain rate (mm/h)",
+      solar: "Solar radiation (W/m²)",
+      uv: "UV index"
+    };
+    const data = rows.slice(1).map(r => ({
+      ts: parseISDate(r[idx[H.ts]] || r[0]),
+      inTemp: toNumSmart(r[idx[H.inTemp]]),
+      temp:   toNumSmart(r[idx[H.temp]]),
+      chill:  toNumSmart(r[idx[H.chill]]),
+      inDew:  toNumSmart(r[idx[H.inDew]]),
+      dew:    toNumSmart(r[idx[H.dew]]),
+      inHeat: toNumSmart(r[idx[H.inHeat]]),
+      heat:   toNumSmart(r[idx[H.heat]]),
+      inHum:  toNumSmart(r[idx[H.inHum]]),
+      hum:    toNumSmart(r[idx[H.hum]]),
+      gust:   toNumSmart(r[idx[H.gust]]),
+      wind:   toNumSmart(r[idx[H.wind]]),
+      windDir:toNumSmart(r[idx[H.windDir]]),
+      press:  toNumSmart(r[idx[H.press]]),
+      rain:   toNumSmart(r[idx[H.rain]]),
+      evapo:  toNumSmart(r[idx[H.evapo]]),
+      rainRate:toNumSmart(r[idx[H.rainRate]]),
+      solar:  toNumSmart(r[idx[H.solar]]),
+      uv:     toNumSmart(r[idx[H.uv]])
+    })).filter(x=>x.ts instanceof Date && !isNaN(x.ts));
+    data.sort((a,b)=>a.ts-b.ts);
+    return data;
   }
 
-  const H = {
-    ts: "Date (Atlantic/Reykjavik)",
-    inTemp: "Inside temperature (°C)",
-    temp: "Temperature (°C)",
-    chill: "Wind chill (°C)",
-    inDew: "Inside dew point (°C)",
-    dew: "Dew point (°C)",
-    inHeat: "Inside heat index (°C)",
-    heat: "Heat index (°C)",
-    inHum: "Inside humidity (%)",
-    hum: "Humidity (%)",
-    gust: "Gust of wind (m/s)",
-    wind: "Average wind speed (m/s)",
-    windDir: "Average wind direction (°)",
-    press: "Atmospheric pressure (hPa)",
-    rain: "Rain (mm)",
-    evapo: "Evapotranspiration (mm)",
-    rainRate: "Rain rate (mm/h)",
-    solar: "Solar radiation (W/m²)",
-    uv: "UV index"
-  };
+  // Útprentunarkubbar
+  const card = (k,v,note="") => `<div class="card"><div class="k">${k}</div><div class="v">${v}</div>${note?`<div class="note">${note}</div>`:""}</div>`;
+  const fmt = (x,dec=1) => x==null || isNaN(x) ? "—" : x.toFixed(dec);
+  const fmtDate = d => d.toLocaleString("is-IS",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
 
-  function card(k,v,note=""){return `<div class="card"><div class="k">${k}</div><div class="v">${v}</div>${note?`<div class="note">${note}</div>`:""}</div>`;}
-
-  function render(d){
-    const g = k => norm(d[k]);                 // texti
-    const n = k => toNum(d[k]);                // tölur
-    const f = (x,dec=1) => x==null?"—":x.toFixed(dec);
-
-    document.getElementById("timestamp").textContent = "Síðast uppfært: " + (g(H.ts) || "—");
-
-    // Yfirlit
-    document.getElementById("overview").innerHTML =
-      card("Hitastig (úti)",  f(n(H.temp))+" °C") +
-      card("Rakastig",        f(n(H.hum),0)+" %") +
-      card("Vindhraði (meðal)", f(n(H.wind))+" m/s") +
-      card("Loftþrýstingur",  f(n(H.press),1)+" hPa");
-
-    // Vindur
-    document.getElementById("wind").innerHTML =
-      card("Vindhraði (meðal)", f(n(H.wind))+" m/s") +
-      card("Vindátt",            g(H.windDir) ? f(n(H.windDir),0)+" °" : "—") +
-      card("Hviður",             f(n(H.gust))+" m/s");
-
-    // Hiti & Raki
-    document.getElementById("temp").innerHTML =
-      card("Hitastig (úti)", f(n(H.temp))+" °C", "Vindkæling "+f(n(H.chill))+" °C") +
-      card("Daggarmark",     f(n(H.dew))+" °C") +
-      card("Hitavísir",      f(n(H.heat))+" °C") +
-      card("Innihiti",       f(n(H.inTemp))+" °C") +
-      card("Innirkaki",      f(n(H.inHum),0)+" %");
-
-    // Aðrar mælingar
-    document.getElementById("extra").innerHTML =
-      card("Útfellingar (regn)", f(n(H.rain),1)+" mm", "Rigningartíðni "+f(n(H.rainRate),1)+" mm/h") +
-      card("Uppgufun",           f(n(H.evapo),1)+" mm") +
-      card("Sólargeislun",       f(n(H.solar),0)+" W/m²") +
-      card("UV vísitala",        f(n(H.uv),1));
-
-    // Aðvaranir
-    const alerts = [];
-    if (n(H.gust) != null && n(H.gust) >= 20) alerts.push(`<div class="pill bad">Háar hviður ≥ 20 m/s</div>`);
-    if (n(H.chill)!= null && n(H.chill) <= -5) alerts.push(`<div class="pill warn">Vindkæling ≤ -5 °C</div>`);
-    if (n(H.heat) != null && n(H.heat) >= 27) alerts.push(`<div class="pill warn">Hitavísir ≥ 27 °C</div>`);
-    document.getElementById("alerts").innerHTML = alerts.join(" ") || "<div class='pill ok'>Engar aðvaranir</div>";
+  // Síupróf
+  function filterRange(data, y, m, dayISO){
+    return data.filter(r=>{
+      const yOk = y? r.ts.getFullYear()===y : true;
+      const mOk = m? (r.ts.getMonth()+1)===m : true;
+      const dOk = dayISO? r.ts.toISOString().slice(0,10)===dayISO : true;
+      return yOk && mOk && dOk;
+    });
   }
 
-  loadData().then(render).catch(e=>{
+  // Línurit (Canvas) fyrir temp
+  function drawLineChart(canvas, points){
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width = canvas.clientWidth;
+    const H = canvas.height = canvas.clientHeight;
+    ctx.clearRect(0,0,W,H);
+    if (points.length<2){ ctx.fillStyle="#666"; ctx.fillText("Ekki nóg af gögnum fyrir línurit.",10,20); return; }
+    const xs = points.map(p=>p.x), ys = points.map(p=>p.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const pad = 30;
+    const scaleX = x => pad + (x-minX)*(W-2*pad)/(maxX-minX);
+    const scaleY = y => H-pad - (y-minY)*(H-2*pad)/(maxY-minY || 1);
+    // ásar
+    ctx.strokeStyle = "#cce4f6"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, pad); ctx.lineTo(pad, H-pad); ctx.lineTo(W-pad, H-pad); ctx.stroke();
+    // lína
+    ctx.strokeStyle = "#0ea5e9"; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.moveTo(scaleX(points[0].x), scaleY(points[0].y));
+    for (let i=1;i<points.length;i++) ctx.lineTo(scaleX(points[i].x), scaleY(points[i].y));
+    ctx.stroke();
+    // min/max texti
+    ctx.fillStyle="#034078"; ctx.font="12px Segoe UI";
+    ctx.fillText(`Min ${fmt(minY)}°C`, W-130, 20);
+    ctx.fillText(`Max ${fmt(maxY)}°C`, W-130, 36);
+  }
+
+  // Aðalflæði
+  let ALL = [];
+  loadAll().then(data=>{
+    ALL = data;
+    // Setja síðast uppfært
+    document.getElementById("timestamp").textContent = "Síðast uppfært: " + fmtDate(ALL[ALL.length-1].ts);
+
+    // Populate ár-lista
+    const years = [...new Set(ALL.map(r=>r.ts.getFullYear()))].sort((a,b)=>a-b);
+    const ySel = document.getElementById("yearSel");
+    ySel.innerHTML = `<option value="">Veldu</option>` + years.map(y=>`<option value="${y}">${y}</option>`).join("");
+
+    // Sjálfgefinn ár = nýjasta
+    ySel.value = years[years.length-1];
+
+    // refresher
+    const refresh = ()=>{
+      const y = parseInt(document.getElementById("yearSel").value||"",10) || null;
+      const m = parseInt(document.getElementById("monthSel").value||"",10) || null;
+      const dayISO = document.getElementById("daySel").value || null;
+      const subset = filterRange(ALL, y, m, dayISO);
+      const last = subset.length ? subset[subset.length-1] : (ALL[ALL.length-1]||{});
+      const tempArr = subset.map(x=>x.temp).filter(v=>v!=null);
+      const tMin = tempArr.length? Math.min(...tempArr): null;
+      const tMax = tempArr.length? Math.max(...tempArr): null;
+      const tAll = ALL.map(x=>x.temp).filter(v=>v!=null);
+      const tAllMin = tAll.length? Math.min(...tAll): null;
+      const tAllMax = tAll.length? Math.max(...tAll): null;
+
+      // Yfirlit
+      document.getElementById("overview").innerHTML =
+        card("Hitastig (úti)",  fmt(last.temp)+" °C", `Lág/Há (valið): ${fmt(tMin)} / ${fmt(tMax)} °C`) +
+        card("Rakastig",        fmt(last.hum,0)+" %") +
+        card("Vindhraði (meðal)", fmt(last.wind)+" m/s") +
+        card("Loftþrýstingur",  fmt(last.press,1)+" hPa") +
+        card("Heildarlág (alltime)", fmt(tAllMin)+" °C") +
+        card("Heildarhá (alltime)", fmt(tAllMax)+" °C");
+
+      // Vindur
+      document.getElementById("wind").innerHTML =
+        card("Vindhraði (meðal)", fmt(last.wind)+" m/s") +
+        card("Vindátt",           last.windDir!=null? fmt(last.windDir,0)+" °" : "—") +
+        card("Hviður",            fmt(last.gust)+" m/s");
+
+      // Hiti & Raki
+      document.getElementById("temp").innerHTML =
+        card("Hitastig (úti)", fmt(last.temp)+" °C", "Vindkæling "+fmt(last.chill)+" °C") +
+        card("Daggarmark",     fmt(last.dew)+" °C") +
+        card("Hitavísir",      fmt(last.heat)+" °C") +
+        card("Innihiti",       fmt(last.inTemp)+" °C") +
+        card("Innirkaki",      fmt(last.inHum,0)+" %");
+
+      // Aðrar mælingar
+      document.getElementById("extra").innerHTML =
+        card("Útfellingar (regn)", fmt(last.rain,1)+" mm", "Rigningartíðni "+fmt(last.rainRate,1)+" mm/h") +
+        card("Uppgufun",           fmt(last.evapo,1)+" mm") +
+        card("Sólargeislun",       fmt(last.solar,0)+" W/m²") +
+        card("UV vísitala",        fmt(last.uv,1));
+
+      // Línurit fyrir valið tímabil
+      const series = subset.filter(r=>r.temp!=null).map(r=>({x:+r.ts, y:r.temp}));
+      const c = document.getElementById("chart");
+      drawLineChart(c, series);
+      document.getElementById("rangeNote").textContent =
+        subset.length ? `Punktar: ${subset.length} — frá ${fmtDate(subset[0].ts)} til ${fmtDate(subset[subset.length-1].ts)}`
+                      : "Engin gögn fyrir valið tímabil.";
+    };
+
+    // event listeners
+    document.getElementById("yearSel").addEventListener("change", ()=>{ document.getElementById("daySel").value=""; refresh(); });
+    document.getElementById("monthSel").addEventListener("change", ()=>{ document.getElementById("daySel").value=""; refresh(); });
+    document.getElementById("daySel").addEventListener("change", refresh);
+
+    // fyrsta render
+    refresh();
+  }).catch(e=>{
     document.getElementById("timestamp").textContent = "Villa við lestur CSV";
     console.error(e);
   });
 
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js");
-  }
+  // PWA
+  if ("serviceWorker" in navigator) { navigator.serviceWorker.register("./sw.js"); }
 </script>
 </body>
 </html>
