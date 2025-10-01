@@ -7,28 +7,29 @@
   <title>Prestsbakki Weather Dashboard</title>
   <link rel="manifest" href="manifest.webmanifest">
   <style>
+    :root{--blue:#0ea5e9;--blue-700:#0369a1;--blue-50:#e0f2fe;--card:#fff;--line:#cce4f6;--text:#0a4d8c}
     body{margin:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#f0f8ff}
     .wx{max-width:1200px;margin:auto;padding:16px;color:#111}
-    h1{margin:0 0 6px;font-size:20px;color:#0a4d8c}
+    h1{margin:0 0 6px;font-size:22px;color:var(--blue-700)}
     .sub{font-size:12px;color:#555;margin:0 0 14px}
     .tabs{display:flex;gap:8px;margin:8px 0 14px;flex-wrap:wrap}
-    .tab{padding:8px 12px;border:1px solid #0ea5e9;border-radius:999px;cursor:pointer;font-size:12px;color:#0a4d8c}
+    .tab{padding:8px 12px;border:1px solid var(--blue);border-radius:999px;cursor:pointer;font-size:12px;color:var(--blue-700)}
     input[type=radio]{display:none}
     .page{display:none}
     #p1:checked ~ .pages #pg1,#p2:checked ~ .pages #pg2,#p3:checked ~ .pages #pg3,#p4:checked ~ .pages #pg4,#p5:checked ~ .pages #pg5{display:block}
-    #p1:checked ~ .tabs label[for=p1],#p2:checked ~ .tabs label[for=p2],#p3:checked ~ .tabs label[for=p3],#p4:checked ~ .tabs label[for=p4],#p5:checked ~ .tabs label[for=p5]{background:#0ea5e9;color:#fff}
+    #p1:checked ~ .tabs label[for=p1],#p2:checked ~ .tabs label[for=p2],#p3:checked ~ .tabs label[for=p3],#p4:checked ~ .tabs label[for=p4],#p5:checked ~ .tabs label[for=p5]{background:var(--blue);color:#fff}
     .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
     @media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
-    .card{background:#fff;border:1px solid #cce4f6;border-radius:14px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
-    .k{font-size:12px;color:#0a4d8c;margin-bottom:6px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .k{font-size:12px;color:var(--text);margin-bottom:6px}
     .v{font-size:22px;font-weight:700;color:#034078}
     .note{font-size:11px;color:#555;margin-top:6px}
-    .bar{height:8px;background:#e0f0fb;border-radius:999px;overflow:hidden;margin-top:6px}
-    .fill{height:100%;background:#0ea5e9;width:0%}
-    .pill{padding:4px 8px;border-radius:999px;font-size:11px;border:1px solid #cce4f6;margin:2px}
+    .pill{padding:4px 8px;border-radius:999px;font-size:11px;border:1px solid var(--line);margin:2px}
     .ok{background:#e6fbe6;border-color:#cceccc}
     .warn{background:#fff7e0;border-color:#ffecb3}
     .bad{background:#fde2e1;border-color:#fbb}
+    .bar{height:8px;background:var(--blue-50);border-radius:999px;overflow:hidden;margin-top:6px}
+    .fill{height:100%;background:var(--blue);width:0%}
   </style>
 </head>
 <body>
@@ -60,61 +61,123 @@
 </div>
 
 <script>
+  // Þinn Google Sheets CSV hlekkur
   const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRUcwYyuBJGhs-FjH19RdCEeGw_KNulQvK1VOXjDIPHaVDFmJ4lom0b6IIbvPIhCe6uV9qREXqGAkJE/pub?output=csv";
+
+  // CSV parser sem virðir gæsalappir og normalíserar heiti
+  function parseCSV(text){
+    const rows = [];
+    let cur = [], cell = "", inQ = false;
+    for (let i=0;i<text.length;i++){
+      const ch = text[i], nx = text[i+1];
+      if (inQ){
+        if (ch === '"' && nx === '"'){ cell += '"'; i++; }
+        else if (ch === '"'){ inQ = false; }
+        else { cell += ch; }
+      } else {
+        if (ch === '"'){ inQ = true; }
+        else if (ch === ','){ cur.push(cell); cell = ""; }
+        else if (ch === '\n'){ cur.push(cell); rows.push(cur); cur = []; cell = ""; }
+        else if (ch === '\r'){ /* skip */ }
+        else { cell += ch; }
+      }
+    }
+    if (cell.length || cur.length) { cur.push(cell); rows.push(cur); }
+    return rows.filter(r => r.some(x => (x||"").trim() !== ""));
+  }
+  const norm = s => (s||"").replace(/\u00A0/g," ").replace(/\s+/g," ").trim(); // fjarlægir NBSP o.fl.
+  const toNum = v => {
+    if (v==null) return null;
+    const s = String(v).trim();
+    if (s==="") return null;
+    // styður bæði 14,7 og 14.7
+    const n = parseFloat(s.replace(/\s/g,"").replace(",","."));
+    return isNaN(n) ? null : n;
+  };
 
   async function loadData(){
     const res = await fetch(CSV_URL);
+    if (!res.ok) throw new Error("Gat ekki sótt CSV");
     const text = await res.text();
-    const rows = text.trim().split("\n").map(r=>r.split(","));
-    const h = rows[0], v = rows[1];
-    const d = {};
-    h.forEach((name,i)=> d[name.trim()] = v[i]);
-    return d;
+    const rows = parseCSV(text);
+    const headers = rows[0].map(norm);
+    // síðasta fyllta lína
+    const last = [...rows].reverse().find(r => r.some(x => norm(x) !== "")) || rows[1];
+    const obj = {};
+    headers.forEach((h,i)=> obj[h] = last[i] ?? "");
+    return obj;
   }
+
+  const H = {
+    ts: "Date (Atlantic/Reykjavik)",
+    inTemp: "Inside temperature (°C)",
+    temp: "Temperature (°C)",
+    chill: "Wind chill (°C)",
+    inDew: "Inside dew point (°C)",
+    dew: "Dew point (°C)",
+    inHeat: "Inside heat index (°C)",
+    heat: "Heat index (°C)",
+    inHum: "Inside humidity (%)",
+    hum: "Humidity (%)",
+    gust: "Gust of wind (m/s)",
+    wind: "Average wind speed (m/s)",
+    windDir: "Average wind direction (°)",
+    press: "Atmospheric pressure (hPa)",
+    rain: "Rain (mm)",
+    evapo: "Evapotranspiration (mm)",
+    rainRate: "Rain rate (mm/h)",
+    solar: "Solar radiation (W/m²)",
+    uv: "UV index"
+  };
 
   function card(k,v,note=""){return `<div class="card"><div class="k">${k}</div><div class="v">${v}</div>${note?`<div class="note">${note}</div>`:""}</div>`;}
 
   function render(d){
-    document.getElementById("timestamp").textContent = "Síðast uppfært: " + d["Date (Atlantic/Reykjavik)"];
+    const g = k => norm(d[k]);                 // texti
+    const n = k => toNum(d[k]);                // tölur
+    const f = (x,dec=1) => x==null?"—":x.toFixed(dec);
+
+    document.getElementById("timestamp").textContent = "Síðast uppfært: " + (g(H.ts) || "—");
 
     // Yfirlit
     document.getElementById("overview").innerHTML =
-      card("Hitastig (úti)", d["Temperature (°C)"]+" °C") +
-      card("Rakastig", d["Humidity (%)"]+" %") +
-      card("Vindhraði (meðal)", d["Average wind speed (m/s)"]+" m/s") +
-      card("Loftþrýstingur", d["Atmospheric pressure (hPa)"]+" hPa");
+      card("Hitastig (úti)",  f(n(H.temp))+" °C") +
+      card("Rakastig",        f(n(H.hum),0)+" %") +
+      card("Vindhraði (meðal)", f(n(H.wind))+" m/s") +
+      card("Loftþrýstingur",  f(n(H.press),1)+" hPa");
 
     // Vindur
     document.getElementById("wind").innerHTML =
-      card("Vindhraði (meðal)", d["Average wind speed (m/s)"]+" m/s") +
-      card("Vindátt", d["Average wind direction (°)"]+" °") +
-      card("Hviður", d["Gust of wind (m/s)"]+" m/s");
+      card("Vindhraði (meðal)", f(n(H.wind))+" m/s") +
+      card("Vindátt",            g(H.windDir) ? f(n(H.windDir),0)+" °" : "—") +
+      card("Hviður",             f(n(H.gust))+" m/s");
 
     // Hiti & Raki
     document.getElementById("temp").innerHTML =
-      card("Hitastig (úti)", d["Temperature (°C)"]+" °C", "Vindkæling "+d["Wind chill (°C)"]+" °C") +
-      card("Daggarmark", d["Dew point (°C)"]+" °C") +
-      card("Hitavísir", d["Heat index (°C)"]+" °C") +
-      card("Innihiti", d["Inside temperature (°C)"]+" °C") +
-      card("Innirkaki", d["Inside humidity (%)"]+" %");
+      card("Hitastig (úti)", f(n(H.temp))+" °C", "Vindkæling "+f(n(H.chill))+" °C") +
+      card("Daggarmark",     f(n(H.dew))+" °C") +
+      card("Hitavísir",      f(n(H.heat))+" °C") +
+      card("Innihiti",       f(n(H.inTemp))+" °C") +
+      card("Innirkaki",      f(n(H.inHum),0)+" %");
 
     // Aðrar mælingar
     document.getElementById("extra").innerHTML =
-      card("Útfellingar (regn)", d["Rain (mm)"]+" mm", "Rigningartíðni "+d["Rain rate (mm/h)"]+" mm/h") +
-      card("Uppgufun", d["Evapotranspiration (mm)"]+" mm") +
-      card("Sólargeislun", d["Solar radiation (W/m²)"]+" W/m²") +
-      card("UV vísitala", d["UV index"]);
+      card("Útfellingar (regn)", f(n(H.rain),1)+" mm", "Rigningartíðni "+f(n(H.rainRate),1)+" mm/h") +
+      card("Uppgufun",           f(n(H.evapo),1)+" mm") +
+      card("Sólargeislun",       f(n(H.solar),0)+" W/m²") +
+      card("UV vísitala",        f(n(H.uv),1));
 
     // Aðvaranir
     const alerts = [];
-    if (parseFloat(d["Gust of wind (m/s)"]) >= 20) alerts.push(`<div class="pill bad">Háar hviður ≥20 m/s</div>`);
-    if (parseFloat(d["Wind chill (°C)"]) <= -5) alerts.push(`<div class="pill warn">Vindkæling ≤ -5 °C</div>`);
-    if (parseFloat(d["Heat index (°C)"]) >= 27) alerts.push(`<div class="pill warn">Hitavísir ≥ 27 °C</div>`);
+    if (n(H.gust) != null && n(H.gust) >= 20) alerts.push(`<div class="pill bad">Háar hviður ≥ 20 m/s</div>`);
+    if (n(H.chill)!= null && n(H.chill) <= -5) alerts.push(`<div class="pill warn">Vindkæling ≤ -5 °C</div>`);
+    if (n(H.heat) != null && n(H.heat) >= 27) alerts.push(`<div class="pill warn">Hitavísir ≥ 27 °C</div>`);
     document.getElementById("alerts").innerHTML = alerts.join(" ") || "<div class='pill ok'>Engar aðvaranir</div>";
   }
 
   loadData().then(render).catch(e=>{
-    document.getElementById("timestamp").textContent = "Villa: " + e;
+    document.getElementById("timestamp").textContent = "Villa við lestur CSV";
+    console.error(e);
   });
 
   if ("serviceWorker" in navigator) {
