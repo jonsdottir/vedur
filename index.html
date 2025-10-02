@@ -7,15 +7,19 @@
 <title>Prestsbakki – veðurstöð</title>
 <link rel="manifest" href="manifest.webmanifest">
 <style>
-:root{--blue:#0ea5e9;--blue-700:#0369a1;--blue-50:#e0f2fe;--card:#fff;--line:#cce4f6;--text:#0a4d8c;--green:#16a34a;--red:#ef4444}
+:root{--blue:#0ea5e9;--blue-700:#0369a1;--blue-50:#e0f2fe;--card:#fff;--line:#cce4f6;--text:#0a4d8c;--good:#16a34a;--bad:#dc2626}
 *{box-sizing:border-box}
-body{margin:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#eef7ff}
-.wx{max-width:1260px;margin:auto;padding:16px;color:#111}
+body{margin:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#eef7ff;color:#111}
+.wx{max-width:1260px;margin:auto;padding:16px}
 h1{margin:0 0 6px;font-size:24px;color:var(--blue-700)}
 .sub{font-size:12px;color:#555;margin:0 0 14px}
 .controls{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 14px}
 .controls select,.controls input,.controls button{padding:6px 10px;border:1px solid var(--line);border-radius:10px;background:#fff}
 .controls button{background:var(--blue);color:#fff;cursor:pointer}
+.hero{display:none;gap:14px;align-items:center;background:linear-gradient(135deg,#cfefff,#e9f7ff);border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 14px}
+.icowrap{width:64px;height:64px}
+.hmain{font-size:20px;font-weight:700;color:#034078}
+.hsub{font-size:12px;color:#555}
 .tabs{display:flex;gap:8px;margin:8px 0 14px;flex-wrap:wrap}
 .tab{padding:8px 12px;border:1px solid var(--blue);border-radius:999px;cursor:pointer;font-size:12px;color:var(--blue-700)}
 input[type=radio]{display:none}
@@ -26,29 +30,37 @@ input[type=radio]{display:none}
 @media (max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .k{font-size:12px;color:var(--text);margin-bottom:6px}
-.v{font-size:26px;font-weight:800;color:#034078}
-.note{font-size:12px;color:#555;margin-top:6px}
-.statline{font-size:12px;color:#333;margin-top:4px}
-.alltime{font-size:12px;margin-top:6px}
-.alltime .low{color:var(--blue-700)}
-.alltime .avg{color:#374151}
-.alltime .high{color:var(--red)}
+.v{font-size:22px;font-weight:700;color:#034078}
+.subline{font-size:12px;color:#555;margin-top:6px}
+.alltime{font-size:12px;margin-top:4px}
+.alltime .hi{color:var(--bad);font-weight:600}
+.alltime .avg{color:#6b7280}
+.alltime .lo{color:var(--good);font-weight:600}
 .empty{padding:12px;border:1px dashed var(--line);border-radius:12px;background:#fff}
 .chart{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px}
 canvas{width:100%;height:220px}
-.axis{font-size:11px;color:#666;margin-top:4px}
-.row{display:flex;gap:8px;align-items:center}
-.icowrap svg{width:28px;height:28px}
-.timeline{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-@media (max-width:850px){.timeline{grid-template-columns:1fr}}
-.tile{display:flex;gap:10px;align-items:center;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px}
-.tile .time{font-weight:700;width:70px}
+.table{width:100%;border-collapse:collapse;font-size:12px}
+.table th,.table td{border:1px solid var(--line);padding:6px;background:#fff;text-align:right}
+.table th:first-child,.table td:first-child{text-align:left}
+.ax{font-size:11px;color:#666;margin-top:4px}
+.gau{position:relative;height:160px}
+.gau .arc{position:absolute;inset:0;border-radius:16px;background:conic-gradient(#0ea5e9 var(--p,0%),#e5eef8 0)}
+.gau .center{position:absolute;inset:20px;background:#fff;border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#034078}
 </style>
 </head>
 <body>
 <div class="wx">
   <h1>Prestsbakki – veðurstöð</h1>
-  <div class="sub" id="rangeAll">Gögn frá: —</div>
+  <div class="sub"><span id="rangeAll">Gögn frá: —</span></div>
+
+  <!-- Hero (bara þegar Dagur er valinn) -->
+  <div class="hero" id="hero">
+    <div class="icowrap" id="ico"></div>
+    <div>
+      <div class="hmain" id="herotitle">Veður yfir daginn</div>
+      <div class="hsub">Dagur: <span id="heroDay">—</span> • Yfirlit: <span id="heroSummary">—</span></div>
+    </div>
+  </div>
 
   <!-- Filters -->
   <div class="controls">
@@ -68,7 +80,6 @@ canvas{width:100%;height:220px}
       <input type="date" id="daySel">
     </label>
     <button id="clearDay">Hreinsa dag</button>
-    <span class="sub" id="rangeSel" style="margin-left:6px"></span>
   </div>
 
   <input type="radio" id="p1" name="tab" checked>
@@ -82,110 +93,178 @@ canvas{width:100%;height:220px}
     <label class="tab" for="p1">Yfirlit</label>
     <label class="tab" for="p2">Vindur</label>
     <label class="tab" for="p3">Hiti &amp; Raki</label>
-    <label class="tab" for="p4">Aðrar mælingar</label>
+    <label class="tab" for="p4">Mælar</label>
     <label class="tab" for="p5">Línurit</label>
-    <label class="tab" for="p6">Dagur</label>
+    <label class="tab" for="p6">Mánaðarsamanburður</label>
   </div>
 
   <div class="pages">
     <div id="pg1" class="page"><div class="grid" id="overview"></div></div>
     <div id="pg2" class="page"><div class="grid" id="wind"></div></div>
     <div id="pg3" class="page"><div class="grid" id="temp"></div></div>
-    <div id="pg4" class="page"><div class="grid" id="extra"></div></div>
+    <div id="pg4" class="page">
+      <div class="grid" id="gauges"></div>
+    </div>
     <div id="pg5" class="page">
       <div class="grid">
-        <div class="card chart"><div class="k">Hiti (°C)</div><canvas id="cTemp"></canvas><div class="axis">X: tími • Y: °C</div></div>
-        <div class="card chart"><div class="k">Vindhraði (m/s)</div><canvas id="cWind"></canvas><div class="axis">X: tími • Y: m/s</div></div>
-        <div class="card chart"><div class="k">Rakastig (%)</div><canvas id="cHum"></canvas><div class="axis">X: tími • Y: %</div></div>
-        <div class="card chart"><div class="k">Loftþrýstingur (hPa)</div><canvas id="cPres"></canvas><div class="axis">X: tími • Y: hPa</div></div>
+        <div class="card chart"><div class="k">Hiti (°C)</div><canvas id="cTemp"></canvas><div class="ax">X: tími • Y: °C</div></div>
+        <div class="card chart"><div class="k">Vindur (m/s)</div><canvas id="cWind"></canvas><div class="ax">X: tími • Y: m/s</div></div>
+        <div class="card chart"><div class="k">Rakastig (%)</div><canvas id="cHum"></canvas><div class="ax">X: tími • Y: %</div></div>
+        <div class="card chart"><div class="k">Loftþrýstingur (hPa)</div><canvas id="cPres"></canvas><div class="ax">X: tími • Y: hPa</div></div>
       </div>
-      <div class="note" id="rangeNote"></div>
+      <div class="subline" id="rangeNote"></div>
     </div>
     <div id="pg6" class="page">
-      <div id="dayWrap" class="empty">Veldu dag hér að ofan til að sjá tímalínu með táknum.</div>
+      <div class="card">
+        <div class="k">Mánaðarsamanburður (valið ár)</div>
+        <table class="table" id="monthTable"></table>
+      </div>
+      <div class="card" id="dayDetail" style="margin-top:10px;display:none">
+        <div class="k">Dagssíða (Klst. niðurbrot)</div>
+        <table class="table" id="dayTable"></table>
+        <div class="subline" id="yoY"></div>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-// ---- Google Sheets CSV ----
+// ---- STILLTU Á ÞINN CSV HLEKK ----
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRUcwYyuBJGhs-FjH19RdCEeGw_KNulQvK1VOXjDIPHaVDFmJ4lom0b6IIbvPIhCe6uV9qREXqGAkJE/pub?output=csv";
 
-// CSV parser & helpers
-function parseCSV(text){const rows=[];let cur=[],cell="",inQ=false;for(let i=0;i<text.length;i++){const ch=text[i],nx=text[i+1];if(inQ){if(ch=='"'&&nx=='"'){cell+='"';i++}else if(ch=='"'){inQ=false}else cell+=ch}else{if(ch=='"')inQ=true;else if(ch==','){cur.push(cell);cell=""}else if(ch=='\n'){cur.push(cell);rows.push(cur);cur=[];cell=""}else if(ch!='\r'){cell+=ch}}}if(cell.length||cur.length){cur.push(cell);rows.push(cur)}return rows.filter(r=>r.some(x=>(x||"").trim()!==""))}
-const norm=s=>(s||"").replace(/\u00A0/g," ").replace(/\s+/g," ").trim();
-function toNumSmart(v){if(v==null)return null;let s=String(v).trim().replace(/\s/g,"");if(s==="")return null;if((s.match(/,|\./g)||[]).length===1){const i=s.search(/[,.]/);if(i>=0&&s.length-i-1===3)s=s.replace(/[,.]/g,"")}else{const last=Math.max(s.lastIndexOf(','),s.lastIndexOf('.'));const dec=s[last];s=s.replace(/[,.]/g,c=>c===dec?'.':'')}s=s.replace(',', '.');const n=parseFloat(s);return isNaN(n)?null:n}
-function parseISDate(s){const t=norm(s).split(' '),dmy=t[0].split('/');if(dmy.length<3)return new Date(NaN);const[d,m,y]=dmy.map(x=>parseInt(x,10));const[H,Min]=(t[1]||"0:00").split(':').map(x=>parseInt(x,10));return new Date(y,m-1,d,H,Min,0)}
-function mean(a){const v=a.filter(x=>x!=null);return v.length? v.reduce((p,c)=>p+c,0)/v.length : null}
-function minA(a){const v=a.filter(x=>x!=null);return v.length? Math.min(...v) : null}
-function maxA(a){const v=a.filter(x=>x!=null);return v.length? Math.max(...v) : null}
-function circularMeanDeg(degs){const v=degs.filter(x=>x!=null);if(!v.length)return null;const r=v.map(d=>d*Math.PI/180),X=mean(r.map(c=>Math.cos(c))),Y=mean(r.map(s=>Math.sin(s)));let a=Math.atan2(Y,X)*180/Math.PI;if(a<0)a+=360;return a}
-function compass16(deg){if(deg==null)return "—";const d=["N","NNA","NA","ANA","A","ASA","SA","SSA","S","SSV","SV","VSV","V","VNV","NV","NNV","N"];return d[Math.round(deg/22.5)]}
-function beaufort(ms){const b=[0.3,1.6,3.4,5.5,8.0,10.8,13.9,17.2,20.8,24.5,28.5,32.7,1e9];const n=["Logn","Andvari","Kul","Gola","Stinningsgola","Kaldi","Stinningskaldi","Allhvass","Hvassviðri","Stormur","Rok","Ofsaveður","Fárviðri"];for(let i=0;i<b.length;i++)if(ms<b[i])return{idx:i,name:n[i]};return{idx:0,name:"—"}}
+// --- CSV + gagnahjálparar ---
+function parseCSV(text){
+  const rows=[];let cur=[],cell="",inQ=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i],nx=text[i+1];
+    if(inQ){ if(ch=='"'&&nx=='"'){cell+='"';i++} else if(ch=='"'){inQ=false} else cell+=ch; }
+    else{ if(ch=='"') inQ=true; else if(ch==','){cur.push(cell);cell=""}
+      else if(ch=='\n'){cur.push(cell);rows.push(cur);cur=[];cell=""}
+      else if(ch!='\r'){cell+=ch} }
+  }
+  if(cell.length||cur.length){cur.push(cell);rows.push(cur)}
+  return rows.filter(r=>r.some(x=>(x||"").trim()!==""));
+}
+const norm = s => (s||"").replace(/\u00A0/g," ").replace(/\s+/g," ").trim();
+function toNumSmart(v){
+  if(v==null) return null; let s=String(v).trim().replace(/\s/g,""); if(s==="") return null;
+  if((s.match(/,|\./g)||[]).length===1){ const i=s.search(/[,.]/); if(i>=0 && s.length-i-1===3) s=s.replace(/[,.]/g,""); }
+  else{ const last=Math.max(s.lastIndexOf(','),s.lastIndexOf('.')); const dec=s[last]; s=s.replace(/[,.]/g,c=>c===dec?'.':''); }
+  s=s.replace(',', '.'); const n=parseFloat(s); return isNaN(n)?null:n;
+}
+function parseISDate(s){
+  const t=norm(s).split(' '), dmy=t[0].split('/'); if(dmy.length<3) return new Date(NaN);
+  const [d,m,y]=dmy.map(x=>parseInt(x,10)); const [H,Min]=(t[1]||"0:00").split(':').map(x=>parseInt(x,10));
+  return new Date(y,m-1,d,H,Min,0);
+}
+function mean(a){const v=a.filter(x=>x!=null); return v.length? v.reduce((p,c)=>p+c,0)/v.length : null;}
+function minA(a){const v=a.filter(x=>x!=null); return v.length? Math.min(...v):null;}
+function maxA(a){const v=a.filter(x=>x!=null); return v.length? Math.max(...v):null;}
+function circularMeanDeg(degs){
+  const v=degs.filter(x=>x!=null); if(!v.length) return null;
+  const rad=v.map(d=>d*Math.PI/180), X=mean(rad.map(r=>Math.cos(r))), Y=mean(rad.map(r=>Math.sin(r)));
+  let a=Math.atan2(Y,X)*180/Math.PI; if(a<0) a+=360; return a;
+}
+function compass16(deg){ if(deg==null) return "—"; const d=["N","NNA","NA","ANA","A","ASA","SA","SSA","S","SSV","SV","VSV","V","VNV","NV","NNV","N"]; return d[Math.round(deg/22.5)]; }
 
 // Icons (inline SVG)
-const ICONS={sun:`<svg viewBox="0 0 24 24" fill="#FDB813"><circle cx="12" cy="12" r="5"/><g stroke="#FDB813" stroke-width="2"><line x1="12" y1="1" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="1" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="23" y2="12"/><line x1="4.2" y1="4.2" x2="6.8" y2="6.8"/><line x1="17.2" y1="17.2" x2="19.8" y2="19.8"/><line x1="17.2" y1="6.8" x2="19.8" y2="4.2"/><line x1="4.2" y1="19.8" x2="6.8" y2="17.2"/></g></svg>`,
-cloud:`<svg viewBox="0 0 24 24"><path fill="#9EC3E6" d="M7 18h10a5 5 0 0 0 0-10 6 6 0 0 0-11-1A4 4 0 0 0 7 18z"/></svg>`,
-rain:`<svg viewBox="0 0 24 24"><path fill="#9EC3E6" d="M7 15h10a5 5 0 0 0 0-10 6 6 0 0 0-11-1A4 4 0 0 0 7 15z"/><g fill="#0ea5e9"><circle cx="8" cy="20" r="1.5"/><circle cx="12" cy="21" r="1.5"/><circle cx="16" cy="20" r="1.5"/></g></svg>`,
-snow:`<svg viewBox="0 0 24 24"><path fill="#9EC3E6" d="M7 15h10a5 5 0 0 0 0-10 6 6 0 0 0-11-1A4 4 0 0 0 7 15z"/><g fill="#BFE3FF"><circle cx="9" cy="20" r="1.3"/><circle cx="12" cy="21" r="1.3"/><circle cx="15" cy="20" r="1.3"/></g></svg>`,
-wind:`<svg viewBox="0 0 24 24"><path fill="#0ea5e9" d="M3 10h12a3 3 0 1 0-3-3"/><path fill="#0ea5e9" d="M3 16h10a3 3 0 1 1-3 3"/></svg>`};
-function inferCondPoint(t,wind,rr,solar){ if(rr&&rr>0) return "rain"; if(t<=0 && rr>0) return "snow"; if(wind>=17) return "wind"; if(solar!=null&&solar>400) return "sun"; if(solar!=null&&solar>100) return "cloud"; return "cloud"; }
+const ICONS={
+  sun:`<svg viewBox="0 0 24 24" width="64" height="64" fill="#FDB813"><circle cx="12" cy="12" r="5"/><g stroke="#FDB813" stroke-width="2"><line x1="12" y1="1" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="1" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="23" y2="12"/><line x1="4.2" y1="4.2" x2="6.8" y2="6.8"/><line x1="17.2" y1="17.2" x2="19.8" y2="19.8"/><line x1="17.2" y1="6.8" x2="19.8" y2="4.2"/><line x1="4.2" y1="19.8" x2="6.8" y2="17.2"/></g></svg>`,
+  cloud:`<svg viewBox="0 0 24 24" width="64" height="64"><path fill="#9EC3E6" d="M7 18h10a5 5 0 0 0 0-10 6 6 0 0 0-11-1A4 4 0 0 0 7 18z"/></svg>`,
+  rain:`<svg viewBox="0 0 24 24" width="64" height="64"><path fill="#9EC3E6" d="M7 15h10a5 5 0 0 0 0-10 6 6 0 0 0-11-1A4 4 0 0 0 7 15z"/><g fill="#0ea5e9"><circle cx="8" cy="20" r="1.5"/><circle cx="12" cy="21" r="1.5"/><circle cx="16" cy="20" r="1.5"/></g></svg>`,
+  snow:`<svg viewBox="0 0 24 24" width="64" height="64"><path fill="#9EC3E6" d="M7 15h10a5 5 0 0 0 0-10 6 6 0 0 0-11-1A4 4 0 0 0 7 15z"/><g fill="#BFE3FF"><circle cx="9" cy="20" r="1.3"/><circle cx="12" cy="21" r="1.3"/><circle cx="15" cy="20" r="1.3"/></g></svg>`,
+  wind:`<svg viewBox="0 0 24 24" width="64" height="64"><path fill="#0ea5e9" d="M3 10h12a3 3 0 1 0-3-3"/><path fill="#0ea5e9" d="M3 16h10a3 3 0 1 1-3 3"/></svg>`,
+  night:`<svg viewBox="0 0 24 24" width="64" height="64"><path fill="#FFD666" d="M14 2a8 8 0 1 0 8 8 6 6 0 1 1-8-8z"/></svg>`
+};
+function inferCondition(avgTemp, avgWind, rainRate, solar){
+  if (rainRate && rainRate>0) return "rain";
+  if (avgTemp<=0 && rainRate>0) return "snow";
+  if (avgWind>=17) return "wind";
+  if (solar!=null && solar>400) return "sun";
+  if (solar!=null && solar>100) return "cloud";
+  return "night";
+}
 
-function fmtDateOnly(d){return d.toLocaleDateString("is-IS")}
-function fmtTime(d){return d.toLocaleTimeString("is-IS",{hour:"2-digit",minute:"2-digit"})}
-
-// Draw charts with ticks & labels
-function drawSeries(canvas, points, yUnit){
-  const ctx=canvas.getContext("2d"), W=canvas.width=canvas.clientWidth, H=canvas.height=canvas.clientHeight;
+// --- Teikna línurit (ásar, tickar og merkingar) ---
+function drawSeries(canvas, points, ylabel){
+  const ctx=canvas.getContext("2d");
+  const W=canvas.width=canvas.clientWidth, H=canvas.height=canvas.clientHeight;
   ctx.clearRect(0,0,W,H);
+  const padL=40,padB=26,padT=8,padR=10;
   if(points.length<2){ ctx.fillStyle="#666"; ctx.fillText("Engin gögn.",10,18); return; }
   const xs=points.map(p=>p.x), ys=points.map(p=>p.y);
   const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys);
-  const pad=32; const sx=x=>pad+(x-minX)*(W-2*pad)/(maxX-minX||1); const sy=y=>H-pad-(y-minY)*(H-2*pad)/(maxY-minY||1);
-  // grid
-  ctx.strokeStyle="#e5f1fb"; ctx.lineWidth=1;
-  const yTicks=5; for(let i=0;i<=yTicks;i++){const y=minY+(i*(maxY-minY)/(yTicks||1)); const yy=sy(y); ctx.beginPath(); ctx.moveTo(pad,yy); ctx.lineTo(W-pad,yy); ctx.stroke(); ctx.fillStyle="#666"; ctx.font="11px Segoe UI"; ctx.fillText(y.toFixed(0),4,yy+3);}
-  // axis
-  ctx.strokeStyle="#cce4f6"; ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,H-pad); ctx.lineTo(W-pad,H-pad); ctx.stroke();
-  // line
-  ctx.strokeStyle="#0ea5e9"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(sx(points[0].x), sy(points[0].y));
-  for(let i=1;i<points.length;i++) ctx.lineTo(sx(points[i].x), sy(points[i].y)); ctx.stroke();
-  // x ticks (start/mid/end)
+  const sx=x=>padL+(x-minX)*(W-padL-padR)/(maxX-minX||1);
+  const sy=y=>H-padB-(y-minY)*(H-padT-padB)/(maxY-minY||1);
+  // rammar
+  ctx.strokeStyle="#cce4f6"; ctx.lineWidth=1; ctx.beginPath();
+  ctx.rect(padL,padT,W-padL-padR,H-padT-padB); ctx.stroke();
+  // Y-ticks
   ctx.fillStyle="#666"; ctx.font="11px Segoe UI";
-  ctx.fillText(new Date(minX).toLocaleString("is-IS",{hour:"2-digit",minute:"2-digit"}), pad, H-6);
-  ctx.fillText(new Date((minX+maxX)/2).toLocaleString("is-IS",{hour:"2-digit",minute:"2-digit"}), (W/2)-20, H-6);
-  ctx.fillText(new Date(maxX).toLocaleString("is-IS",{hour:"2-digit",minute:"2-digit"}), W-80, H-6);
+  const steps=4; for(let i=0;i<=steps;i++){ const y=minY+(i*(maxY-minY))/steps; const yy=sy(y);
+    ctx.strokeStyle="#e5eef8"; ctx.beginPath(); ctx.moveTo(padL,yy); ctx.lineTo(W-padR,yy); ctx.stroke();
+    ctx.fillText(y.toFixed(1),4,yy+3);
+  }
+  // X-ticks (klst)
+  const tsteps=4; for(let i=0;i<=tsteps;i++){ const x=minX+(i*(maxX-minX))/tsteps; const xx=sx(x);
+    const d=new Date(x); const lab = d.toLocaleTimeString("is-IS",{hour:"2-digit",minute:"2-digit"});
+    ctx.fillText(lab,xx-14,H-6);
+  }
+  // merking Y
+  ctx.save(); ctx.translate(12, H/2); ctx.rotate(-Math.PI/2); ctx.fillText(ylabel,0,0); ctx.restore();
+  // línan
+  ctx.strokeStyle="#0ea5e9"; ctx.lineWidth=2; ctx.beginPath();
+  ctx.moveTo(sx(points[0].x), sy(points[0].y));
+  for(let i=1;i<points.length;i++) ctx.lineTo(sx(points[i].x), sy(points[i].y));
+  ctx.stroke();
 }
 
-async function loadAll(){
-  const res=await fetch(CSV_URL); if(!res.ok) throw new Error("Sækir CSV tókst ekki");
-  const rows=parseCSV(await res.text()); const headers=rows[0].map(norm); const id=Object.fromEntries(headers.map((h,i)=>[h,i]));
-  const H={ts:"Date (Atlantic/Reykjavik)", temp:"Temperature (°C)", hum:"Humidity (%)",
-           wind:"Average wind speed (m/s)", gust:"Gust of wind (m/s)", windDir:"Average wind direction (°)",
-           press:"Atmospheric pressure (hPa)", rain:"Rain (mm)", rainRate:"Rain rate (mm/h)",
-           solar:"Solar radiation (W/m²)", uv:"UV index", chill:"Wind chill (°C)",
-           inTemp:"Inside temperature (°C)", inHum:"Inside humidity (%)", dew:"Dew point (°C)", heat:"Heat index (°C)"};
-  const data = rows.slice(1).map(r=>({
+// --- App state ---
+let ALL=[];
+
+(async function init(){
+  const res = await fetch(CSV_URL);
+  const rows = parseCSV(await res.text());
+  const headers = rows[0].map(norm);
+  const id = Object.fromEntries(headers.map((h,i)=>[h,i]));
+  const H={
+    ts:"Date (Atlantic/Reykjavik)", temp:"Temperature (°C)", hum:"Humidity (%)",
+    wind:"Average wind speed (m/s)", gust:"Gust of wind (m/s)", windDir:"Average wind direction (°)",
+    press:"Atmospheric pressure (hPa)", rain:"Rain (mm)", rainRate:"Rain rate (mm/h)",
+    solar:"Solar radiation (W/m²)", uv:"UV index", chill:"Wind chill (°C)",
+    inTemp:"Inside temperature (°C)", inHum:"Inside humidity (%)", dew:"Dew point (°C)", heat:"Heat index (°C)"
+  };
+  ALL = rows.slice(1).map(r=>({
     ts: parseISDate(r[id[H.ts]]||r[0]),
     temp: toNumSmart(r[id[H.temp]]), hum: toNumSmart(r[id[H.hum]]),
     wind: toNumSmart(r[id[H.wind]]), gust: toNumSmart(r[id[H.gust]]), windDir: toNumSmart(r[id[H.windDir]]),
     press: toNumSmart(r[id[H.press]]), rain: toNumSmart(r[id[H.rain]]), rainRate: toNumSmart(r[id[H.rainRate]]),
-    solar: toNumSmart(r[id[H.solar]]), uv: toNumSmart(r[id[H.uv]]), chill: toNumSmart(r[id[H.chill]]),
-    inTemp: toNumSmart(r[id[H.inTemp]]), inHum: toNumSmart(r[id[H.inHum]]), dew: toNumSmart(r[id[H.dew]]), heat: toNumSmart(r[id[H.heat]])
+    solar: toNumSmart(r[id[H.solar]]), uv: toNumSmart(r[id[H.uv]]),
+    chill: toNumSmart(r[id[H.chill]]), inTemp: toNumSmart(r[id[H.inTemp]]), inHum: toNumSmart(r[id[H.inHum]]),
+    dew: toNumSmart(r[id[H.dew]]), heat: toNumSmart(r[id[H.heat]])
   })).filter(x=>x.ts instanceof Date && !isNaN(x.ts));
-  data.sort((a,b)=>a.ts-b.ts);
-  return data;
-}
+  ALL.sort((a,b)=>a.ts-b.ts);
 
-const card=(title,meanTxt,low,high,allLow,allAvg,allHigh,unit="")=>`
-  <div class="card">
-    <div class="k">${title}</div>
-    <div class="v">${meanTxt}${unit}</div>
-    <div class="statline">Lág ${low}${unit} • Há ${high}${unit}</div>
-    <div class="alltime"><span class="low">Allt – Lág ${allLow}${unit}</span> • <span class="avg">Meðal ${allAvg}${unit}</span> • <span class="high">Há ${allHigh}${unit}</span></div>
-  </div>`;
+  // Gögn frá (dagsetning eingöngu)
+  const first=ALL[0]?.ts, last=ALL[ALL.length-1]?.ts;
+  const fmtD = d => d? d.toLocaleDateString("is-IS") : "—";
+  document.getElementById("rangeAll").textContent = `Gögn frá: ${fmtD(first)} — ${fmtD(last)}`;
 
-const fmt=(x,dec=1)=>(x==null||isNaN(x))?"—":x.toFixed(dec);
+  // Áralisti
+  const years=[...new Set(ALL.map(r=>r.ts.getFullYear()))].sort((a,b)=>a-b);
+  const ySel=document.getElementById("yearSel");
+  ySel.innerHTML=`<option value="">Veldu</option>`+years.map(y=>`<option value="${y}">${y}</option>`).join("");
+  if(years.length) ySel.value=years.at(-1);
+
+  // Clear dag hnappur
+  document.getElementById("clearDay").addEventListener("click", ()=>{ document.getElementById("daySel").value=""; refresh(); });
+
+  // Eventar
+  ["yearSel","monthSel","daySel"].forEach(id=>document.getElementById(id).addEventListener("change", refresh));
+
+  // Fyrsta render
+  refresh();
+})().catch(e=>{ console.error(e); document.getElementById("rangeAll").textContent="Villa við lestur CSV"; });
 
 function filterRange(data,y,m,dayISO){
   return data.filter(r=>{
@@ -195,113 +274,142 @@ function filterRange(data,y,m,dayISO){
     return yOk && mOk && dOk;
   });
 }
+const fmt = (x,dec=1) => (x==null || isNaN(x)) ? "—" : x.toFixed(dec);
+const card = (k,v,note="") => `<div class="card"><div class="k">${k}</div><div class="v">${v}</div>${note?`<div class="subline">${note}</div>`:""}</div>`;
 
-let ALL=[];
-loadAll().then(data=>{
-  ALL=data;
-  if(!ALL.length){ document.getElementById("rangeAll").textContent="Engin gögn"; return; }
-  const first=ALL[0].ts, last=ALL[ALL.length-1].ts;
-  document.getElementById("rangeAll").textContent = `Gögn frá: ${fmtDateOnly(first)} — ${fmtDateOnly(last)}`;
+function refresh(){
+  const y=parseInt(document.getElementById("yearSel").value||"",10)||null;
+  const m=parseInt(document.getElementById("monthSel").value||"",10)||null;
+  const dayISO=document.getElementById("daySel").value||null;
 
-  // Ár
-  const years=[...new Set(ALL.map(r=>r.ts.getFullYear()))].sort((a,b)=>a-b);
-  const ySel=document.getElementById("yearSel");
-  ySel.innerHTML=`<option value="">Veldu</option>`+years.map(y=>`<option value="${y}">${y}</option>`).join("");
-  if(years.length) ySel.value=years[years.length-1];
+  const S = filterRange(ALL,y,m,dayISO);
+  const base = S.length? S : ALL; // til að línurit birtist alltaf
 
-  const clearDay=()=>{ document.getElementById("daySel").value=""; refresh(); };
-  document.getElementById("clearDay").addEventListener("click", clearDay);
-
-  function refresh(){
-    const y=parseInt(document.getElementById("yearSel").value||"",10)||null;
-    const m=parseInt(document.getElementById("monthSel").value||"",10)||null;
-    const dayISO=document.getElementById("daySel").value||null;
-    const S=filterRange(ALL,y,m,dayISO);
-    document.getElementById("rangeSel").textContent = S.length ? `Val: ${fmtDateOnly(S[0].ts)} — ${fmtDateOnly(S[S.length-1].ts)} (${S.length})` : "Val: —";
-
-    // fall-back fyrir línurit: ef ekkert val, nota ALL
-    const base = S.length ? S : ALL;
-
-    // gagnaraðir
-    const arr=k=>base.map(x=>x[k]).filter(v=>v!=null);
-    const tArr=arr("temp"), hArr=arr("hum"), wArr=arr("wind"), pArr=arr("press");
-    const gArr=arr("gust"), dirArr=base.map(x=>x.windDir).filter(v=>v!=null);
-    const rrArr=arr("rainRate"), rArr=arr("rain"), sArr=arr("solar"), uArr=arr("uv");
-
-    const tAll=ALL.map(x=>x.temp).filter(v=>v!=null), wAll=ALL.map(x=>x.wind).filter(v=>v!=null),
-          hAll=ALL.map(x=>x.hum).filter(v=>v!=null), pAll=ALL.map(x=>x.press).filter(v=>v!=null);
-
-    // Yfirlit
-    document.getElementById("overview").innerHTML =
-      card("Hitastig (°C)", fmt(mean(tArr)), fmt(minA(tArr)), fmt(maxA(tArr)), fmt(minA(tAll)), fmt(mean(tAll)), fmt(maxA(tAll)), " °C".slice(0,0)) + /* unit sett í textana fyrir neðan */
-      card("Rakastig (%)", fmt(mean(hArr),0), fmt(minA(hArr),0), fmt(maxA(hArr),0), fmt(minA(hAll),0), fmt(mean(hAll),0), fmt(maxA(hAll),0)) +
-      card("Vindhraði (m/s)", fmt(mean(wArr)), fmt(minA(wArr)), fmt(maxA(wArr)), fmt(minA(wAll)), fmt(mean(wAll)), fmt(maxA(wAll))) +
-      card("Loftþrýstingur (hPa)", fmt(mean(pArr),1), fmt(minA(pArr),1), fmt(maxA(pArr),1), fmt(minA(pAll),1), fmt(mean(pAll),1), fmt(maxA(pAll),1));
-
-    // Vindur
-    const dirMean=circularMeanDeg(dirArr), dirName=compass16(dirMean), bf=beaufort(mean(wArr)||0);
-    document.getElementById("wind").innerHTML =
-      card("Meðalvindhraði (m/s)", fmt(mean(wArr)), fmt(minA(wArr)), fmt(maxA(wArr)), fmt(minA(wAll)), fmt(mean(wAll)), fmt(maxA(wAll))) +
-      card("Hviður (m/s)", "—", fmt(minA(gArr)), fmt(maxA(gArr)), "—", "—", "—") +
-      card("Meðalvindátt", `${dirName} (${fmt(dirMean,0)}°)`, "—", "—", "—", "—", "—") +
-      card("Rigningartíðni (mm/h)", fmt(mean(rrArr)), fmt(minA(rrArr)), fmt(maxA(rrArr)), "—","—","—");
-
-    // Hiti & Raki
-    document.getElementById("temp").innerHTML =
-      card("Hitastig (°C)", fmt(mean(tArr)), fmt(minA(tArr)), fmt(maxA(tArr)), fmt(minA(tAll)), fmt(mean(tAll)), fmt(maxA(tAll))) +
-      card("Vindkæling (°C)", fmt(mean(base.map(x=>x.chill).filter(v=>v!=null))), fmt(minA(base.map(x=>x.chill))), fmt(maxA(base.map(x=>x.chill))), "—","—","—") +
-      card("Daggarmark (°C)", fmt(mean(base.map(x=>x.dew).filter(v=>v!=null))), fmt(minA(base.map(x=>x.dew))), fmt(maxA(base.map(x=>x.dew))), "—","—","—") +
-      card("Innirkaki (%)", fmt(mean(base.map(x=>x.inHum).filter(v=>v!=null)),0), fmt(minA(base.map(x=>x.inHum)),0), fmt(maxA(base.map(x=>x.inHum)),0), "—","—","—");
-
-    // Aðrar mælingar
-    const rainSum = rArr.length? rArr.reduce((a,b)=>a+b,0) : null;
-    document.getElementById("extra").innerHTML =
-      card("Úrkomusumma (mm)", fmt(rainSum,1), "—", "—", "—","—","—") +
-      card("Sólargeislun (W/m²)", fmt(mean(sArr),0), fmt(minA(sArr),0), fmt(maxA(sArr),0), "—","—","—") +
-      card("UV vísitala", fmt(mean(uArr),1), "—", fmt(maxA(uArr),1), "—","—","—") +
-      card("Innihiti (°C)", fmt(mean(base.map(x=>x.inTemp).filter(v=>v!=null))), fmt(minA(base.map(x=>x.inTemp))), fmt(maxA(base.map(x=>x.inTemp))), "—","—","—");
-
-    // Línurit (nota base – allt ef ekkert val)
-    const series=k=>base.filter(r=>r[k]!=null).map(r=>({x:+r.ts,y:r[k]}));
-    drawSeries(document.getElementById("cTemp"), series("temp"), "°C");
-    drawSeries(document.getElementById("cWind"), series("wind"), "m/s");
-    drawSeries(document.getElementById("cHum"),  series("hum"),  "%");
-    drawSeries(document.getElementById("cPres"), series("press"), "hPa");
-    document.getElementById("rangeNote").textContent = `Tímabil á grafi: ${fmtDateOnly(base[0].ts)} — ${fmtDateOnly(base[base.length-1].ts)} (${base.length} mælingar)`;
-
-    // Dagssíða – aðeins ef dagur valinn
-    const dayWrap=document.getElementById("dayWrap");
-    if(document.getElementById("daySel").value){
-      const D = filterRange(ALL,null,null,document.getElementById("daySel").value);
-      if(!D.length){ dayWrap.className="empty"; dayWrap.textContent="Engin gögn fyrir þennan dag."; }
-      else{
-        const tiles = D.map(r=>{
-          const cond = inferCondPoint(r.temp, r.wind, r.rainRate, r.solar);
-          return `<div class="tile">
-            <div class="time">${fmtTime(r.ts)}</div>
-            <div class="icowrap">${ICONS[cond]}</div>
-            <div class="muted">Hiti ${fmt(r.temp)}°C • Vind ${fmt(r.wind)} m/s • Raki ${fmt(r.hum,0)}% • Þrýstingur ${fmt(r.press,1)} hPa</div>
-          </div>`;
-        }).join("");
-        dayWrap.className="timeline";
-        dayWrap.innerHTML = tiles;
-      }
-    } else {
-      dayWrap.className="empty";
-      dayWrap.textContent="Veldu dag hér að ofan til að sjá tímalínu með táknum.";
-    }
+  // Hero bara þegar dagur er valinn
+  const hero = document.getElementById("hero");
+  hero.style.display = dayISO? "flex":"none";
+  if(dayISO){
+    const aTemp=mean(S.map(r=>r.temp)), aWind=mean(S.map(r=>r.wind));
+    const cond=inferCondition(aTemp,aWind,mean(S.map(r=>r.rainRate)),mean(S.map(r=>r.solar)));
+    document.getElementById("ico").innerHTML=ICONS[cond];
+    document.getElementById("herotitle").textContent={sun:"Sólskin",cloud:"Hálfskýjað",rain:"Rigning",snow:"Snjókoma",wind:"Vindasamt",night:"Dauft"}[cond];
+    document.getElementById("heroDay").textContent = new Date(dayISO).toLocaleDateString("is-IS");
+    document.getElementById("heroSummary").textContent = `Meðalhiti ${fmt(aTemp)}°C, meðalvindur ${fmt(aWind)} m/s`;
   }
 
-  document.getElementById("yearSel").addEventListener("change", ()=>{ document.getElementById("daySel").value=""; refresh(); });
-  document.getElementById("monthSel").addEventListener("change", ()=>{ document.getElementById("daySel").value=""; refresh(); });
-  document.getElementById("daySel").addEventListener("change", refresh);
+  // Stats helpers
+  const stats=(arr,dec=1)=>({lo:fmt(minA(arr),dec), avg:fmt(mean(arr),dec), hi:fmt(maxA(arr),dec)});
+  const allStats=(k,dec=1)=>({lo:fmt(minA(ALL.map(x=>x[k]).filter(v=>v!=null)),dec), avg:fmt(mean(ALL.map(x=>x[k]).filter(v=>v!=null)),dec), hi:fmt(maxA(ALL.map(x=>x[k]).filter(v=>v!=null)),dec)});
 
-  refresh();
-}).catch(e=>{
-  document.getElementById("rangeAll").textContent="Villa við lestur CSV";
-  console.error(e);
-});
+  // Yfirlit
+  if(!S.length && (y||m||dayISO)){
+    ["overview","wind","temp","gauges"].forEach(id=>document.getElementById(id).innerHTML=`<div class="empty">Engin gögn fyrir valið tímabil.</div>`);
+  }else{
+    const T=stats(base.map(x=>x.temp)), H=stats(base.map(x=>x.hum),0), W=stats(base.map(x=>x.wind)), P=stats(base.map(x=>x.press),1);
+    const Tall=allStats("temp"), Hall=allStats("hum",0), Wall=allStats("wind"), Pall=allStats("press",1);
+    const allLine = (o)=>`<span class="lo">Lág ${o.lo}</span> • <span class="avg">Meðal ${o.avg}</span> • <span class="hi">Há ${o.hi}</span>`;
+    document.getElementById("overview").innerHTML =
+      card("Hitastig (°C)", `${T.avg}`, `Lág ${T.lo} • Há ${T.hi}<div class="alltime">Allt: ${allLine(Tall)}</div>`) +
+      card("Rakastig (%)", `${H.avg}`, `Lág ${H.lo} • Há ${H.hi}<div class="alltime">Allt: ${allLine(Hall)}</div>`) +
+      card("Vindur (m/s)", `${W.avg}`, `Lág ${W.lo} • Há ${W.hi}<div class="alltime">Allt: ${allLine(Wall)}</div>`) +
+      card("Loftþrýstingur (hPa)", `${P.avg}`, `Lág ${P.lo} • Há ${P.hi}<div class="alltime">Allt: ${allLine(Pall)}</div>`);
 
+    // Vindur
+    const G=stats(base.map(x=>x.gust));
+    const dirMean=circularMeanDeg(base.map(x=>x.windDir)); const dirName=compass16(dirMean);
+    document.getElementById("wind").innerHTML =
+      card("Meðalvindur (m/s)", W.avg, `Lág ${W.lo} • Há ${W.hi}`) +
+      card("Hviður (m/s)", `Lág ${G.lo} • Há ${G.hi}`) +
+      card("Meðalvindátt", `${dirName} (${fmt(dirMean,0)}°)`, "Ringmeðaltal");
+
+    // Hiti & Raki
+    const C=stats(base.map(x=>x.chill)), D=stats(base.map(x=>x.dew)), IH=stats(base.map(x=>x.inHum),0), IT=stats(base.map(x=>x.inTemp));
+    document.getElementById("temp").innerHTML =
+      card("Hiti (°C)", T.avg, `Lág ${T.lo} • Há ${T.hi}`) +
+      card("Vindkæling (°C)", C.avg, `Lág ${C.lo} • Há ${C.hi}`) +
+      card("Daggarmark (°C)", D.avg, `Lág ${D.lo} • Há ${D.hi}`) +
+      card("Innirkaki (%)", IH.avg, `Lág ${IH.lo} • Há ${IH.hi}`);
+
+    // Mælar (CSS conic gauge)
+    const gCard=(tit, val, unit, pct)=>`
+      <div class="card gau">
+        <div class="k">${tit}</div>
+        <div class="arc" style="--p:${pct}%"></div>
+        <div class="center">${val} ${unit}</div>
+      </div>`;
+    const humAvg = mean(base.map(x=>x.hum)), tempAvg = mean(base.map(x=>x.temp));
+    const presAvg = mean(base.map(x=>x.press)); const windAvg = mean(base.map(x=>x.wind));
+    document.getElementById("gauges").innerHTML =
+      gCard("Hiti (meðal)", fmt(tempAvg),"°C", Math.min(100, (tempAvg+20)*1.5)) +
+      gCard("Rakastig (meðal)", fmt(humAvg,0),"%", humAvg||0) +
+      gCard("Loftþrýstingur (meðal)", fmt(presAvg,1),"hPa", Math.min(100, ((presAvg-950)/100)*100)) +
+      gCard("Vindur (meðal)", fmt(windAvg),"m/s", Math.min(100, (windAvg/25)*100));
+  }
+
+  // Línurit (nota base svo birtist alltaf)
+  const ser=(k)=>base.filter(r=>r[k]!=null).map(r=>({x:+r.ts,y:r[k]}));
+  drawSeries(document.getElementById("cTemp"), ser("temp"), "°C");
+  drawSeries(document.getElementById("cWind"), ser("wind"), "m/s");
+  drawSeries(document.getElementById("cHum"),  ser("hum"),  "%");
+  drawSeries(document.getElementById("cPres"), ser("press"), "hPa");
+  const s0=base[0], sN=base.at(-1);
+  const fmtDT = d => d? d.toLocaleString("is-IS",{year:"2-digit",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}):"—";
+  document.getElementById("rangeNote").textContent = base.length? `Frá ${fmtDT(s0.ts)} til ${fmtDT(sN.ts)} • ${base.length} mælingar` : "—";
+
+  // Mánaðarsamanburður (fyrir valið ár)
+  buildMonthlyTable(y || ALL.at(-1).ts.getFullYear());
+
+  // Dagssíða (klst brot + YoY) ef dagur valinn
+  buildDayDetail(dayISO);
+}
+
+function buildMonthlyTable(year){
+  const tbl=document.getElementById("monthTable");
+  const months=[...Array(12).keys()].map(i=>i+1);
+  const rows=[["Mánuður","Hitastig L/Með/H", "Vindur L/Með/H", "Raki L/Með/H", "Þrýstingur L/Með/H"]];
+  months.forEach(m=>{
+    const S=filterRange(ALL,year,m,null);
+    const s=(arr,dec=1)=>`${fmt(minA(arr),dec)} / ${fmt(mean(arr),dec)} / ${fmt(maxA(arr),dec)}`;
+    rows.push([
+      new Date(year,m-1,1).toLocaleString("is-IS",{month:"short"}),
+      s(S.map(x=>x.temp)), s(S.map(x=>x.wind)), s(S.map(x=>x.hum),0), s(S.map(x=>x.press),1)
+    ]);
+  });
+  tbl.innerHTML = rows.map((r,i)=>`<tr>${r.map((c,j)=> i===0? `<th>${c}</th>`:`<td>${c}</td>`).join("")}</tr>`).join("");
+}
+
+function buildDayDetail(dayISO){
+  const wrap=document.getElementById("dayDetail");
+  const tbl=document.getElementById("dayTable");
+  const yoy=document.getElementById("yoY");
+  if(!dayISO){ wrap.style.display="none"; tbl.innerHTML=""; yoy.textContent=""; return; }
+  const S=filterRange(ALL,null,null,dayISO);
+  if(!S.length){ wrap.style.display="none"; tbl.innerHTML=""; yoy.textContent=""; return; }
+  wrap.style.display="block";
+  // Klst niðurbrot
+  const byHour=new Map();
+  S.forEach(r=>{ const k=r.ts.getHours(); if(!byHour.has(k)) byHour.set(k,[]); byHour.get(k).push(r); });
+  const hours=[...byHour.keys()].sort((a,b)=>a-b);
+  const rows=[["Tími","Hiti °C (L/Með/H)","Vindur m/s (L/Með/H)","Raki % (L/Með/H)","Þrýstingur hPa (L/Með/H)"]];
+  hours.forEach(h=>{
+    const arr=byHour.get(h);
+    const s=(arr,sel,dec=1)=>`${fmt(minA(arr.map(x=>x[sel])),dec)} / ${fmt(mean(arr.map(x=>x[sel])),dec)} / ${fmt(maxA(arr.map(x=>x[sel])),dec)}`;
+    rows.push([`${String(h).padStart(2,"0")}:00`, s(arr,"temp"), s(arr,"wind"), s(arr,"hum",0), s(arr,"press",1)]);
+  });
+  tbl.innerHTML = rows.map((r,i)=>`<tr>${r.map((c,j)=> i===0? `<th>${c}</th>`:`<td>${c}</td>`).join("")}</tr>`).join("");
+
+  // YoY samanburður – sami dagur í fyrra
+  const d=new Date(dayISO); const lastYear=d.getFullYear()-1;
+  const isoLastYear=new Date(lastYear,d.getMonth(),d.getDate()).toISOString().slice(0,10);
+  const P=filterRange(ALL,lastYear,null,isoLastYear);
+  if(P.length){
+    yoy.textContent=`Samanburður við ${new Date(isoLastYear).toLocaleDateString("is-IS")}: meðalhiti ${fmt(mean(P.map(x=>x.temp)))}°C vs ${fmt(mean(S.map(x=>x.temp)))}°C, meðalvindur ${fmt(mean(P.map(x=>x.wind)))} m/s vs ${fmt(mean(S.map(x=>x.wind)))} m/s.`;
+  }else{
+    yoy.textContent="Engin samanburðargögn frá síðasta ári fyrir þennan dag.";
+  }
+}
+
+// PWA
 if("serviceWorker" in navigator){ navigator.serviceWorker.register("./sw.js"); }
 </script>
 </body>
