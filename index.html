@@ -1,262 +1,293 @@
 <!DOCTYPE html>
 <html lang="is">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<meta name="theme-color" content="#0ea5e9" />
-<title>Prestsbakki – veðurstöð</title>
-<link rel="manifest" href="manifest.webmanifest">
-<style>
-:root{--blue:#0ea5e9;--blue-700:#0369a1;--blue-50:#e0f2fe;--card:#fff;--line:#cce4f6;--text:#0a4d8c;--green:#16a34a;--red:#ef4444}
-*{box-sizing:border-box}
-body{margin:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#eef7ff}
-.wx{max-width:1260px;margin:auto;padding:16px;color:#111}
-h1{margin:0 0 6px;font-size:24px;color:var(--blue-700)}
-.sub{font-size:12px;color:#555;margin:0 0 14px}
-.controls{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 14px}
-.controls select,.controls input,.controls button{padding:6px 10px;border:1px solid var(--line);border-radius:10px;background:#fff}
-.controls button{background:var(--blue);color:#fff;cursor:pointer}
-.tabs{display:flex;gap:8px;margin:8px 0 14px;flex-wrap:wrap}
-.tab{padding:8px 12px;border:1px solid var(--blue);border-radius:999px;cursor:pointer;font-size:12px;color:var(--blue-700)}
-input[type=radio]{display:none}
-.page{display:none}
-#p1:checked ~ .pages #pg1,#p2:checked ~ .pages #pg2,#p3:checked ~ .pages #pg3,#p4:checked ~ .pages #pg4,#p5:checked ~ .pages #pg5,#p6:checked ~ .pages #pg6,#p7:checked ~ .pages #pg7,#p8:checked ~ .pages #pg8{display:block}
-#p1:checked ~ .tabs label[for=p1],#p2:checked ~ .tabs label[for=p2],#p3:checked ~ .tabs label[for=p3],#p4:checked ~ .tabs label[for=p4],#p5:checked ~ .tabs label[for=p5],#p6:checked ~ .tabs label[for=p6],#p7:checked ~ .tabs label[for=p7],#p8:checked ~ .tabs label[for=p8]{background:var(--blue);color:#fff}
-.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-@media (max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.k{font-size:12px;color:var(--text);margin-bottom:6px}
-.v{font-size:26px;font-weight:800;color:#034078}
-.note{font-size:12px;color:#555;margin-top:6px}
-.statline{font-size:12px;color:#333;margin-top:4px}
-.alltime{font-size:12px;margin-top:6px}
-.alltime .low{color:var(--blue-700)}
-.alltime .avg{color:#374151}
-.alltime .high{color:var(--red)}
-.empty{padding:12px;border:1px dashed var(--line);border-radius:12px;background:#fff}
-.chart{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px}
-canvas{width:100%;height:220px}
-.axis{font-size:11px;color:#666;margin-top:4px}
-.row{display:flex;gap:8px;align-items:center}
-.icowrap svg{width:28px;height:28px}
-.timeline{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-@media (max-width:850px){.timeline{grid-template-columns:1fr}}
-.tile{display:flex;gap:10px;align-items:center;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px}
-.tile .time{font-weight:700;width:70px}
-.gauge-wrap{display:flex;justify-content:center;align-items:center;flex-direction:column;padding:20px}
-.gauge-svg{width:240px;height:160px}
-.gauge-val{font-size:36px;font-weight:800;color:#034078;margin-top:-30px}
-.gauge-label{font-size:13px;color:#666;margin-top:4px}
-.minmax-table{width:100%;margin-top:12px;border-collapse:collapse}
-.minmax-table td{padding:6px 8px;border-bottom:1px solid #f0f0f0;font-size:13px}
-.minmax-table td:first-child{color:#666;width:80px}
-.minmax-table .max-val{color:var(--red);font-weight:600}
-.minmax-table .min-val{color:var(--blue-700);font-weight:600}
-.day-summary{background:#f8fbff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
-.day-summary h3{margin:0 0 10px;font-size:16px;color:var(--blue-700)}
-.day-summary p{margin:6px 0;font-size:14px;line-height:1.6;color:#333}
-.comparison{background:#fff5e6;border:1px solid #ffe0b2;border-radius:8px;padding:10px;margin-top:10px;font-size:13px}
-.month-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-@media (max-width:900px){.month-grid{grid-template-columns:repeat(2,1fr)}}
-@media (max-width:600px){.month-grid{grid-template-columns:1fr}}
-.month-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
-.month-card h4{margin:0 0 10px;font-size:15px;color:var(--blue-700)}
-.month-stats{font-size:13px;line-height:1.8}
-.month-stats div{display:flex;justify-content:space-between}
-.month-stats .label{color:#666}
-.month-stats .value{font-weight:600;color:#034078}
-.gauge-container{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-@media (max-width:900px){.gauge-container{grid-template-columns:1fr}}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veðurstöð Prestsbakka</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            padding: 40px;
+        }
+
+        .weather-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .weather-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .weather-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-title {
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .card-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .card-unit {
+            font-size: 1.2em;
+            color: #999;
+        }
+
+        .timestamp {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .timestamp-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .timestamp-value {
+            color: #667eea;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .error {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            color: #e74c3c;
+        }
+
+        .wind-direction {
+            width: 60px;
+            height: 60px;
+            margin: 10px auto;
+            position: relative;
+        }
+
+        .wind-arrow {
+            width: 100%;
+            height: 100%;
+            background: #667eea;
+            clip-path: polygon(50% 0%, 70% 40%, 60% 40%, 60% 100%, 40% 100%, 40% 40%, 30% 40%);
+            transition: transform 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+            
+            .weather-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="wx">
-  <h1>Prestsbakki – veðurstöð</h1>
-  <div class="sub" id="rangeAll">Gögn frá: —</div>
+    <div class="container">
+        <header>
+            <h1>⛅ Veðurstöð Prestsbakka</h1>
+            <p class="subtitle">Rauntíma veðurgögn</p>
+        </header>
 
-  <div class="controls">
-    <label>Ár: <select id="yearSel"></select></label>
-    <label>Mánuður:
-      <select id="monthSel">
-        <option value="">Allir</option>
-        <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
-        <option value="4">Apr</option><option value="5">Maí</option><option value="6">Jún</option>
-        <option value="7">Júl</option><option value="8">Ágú</option><option value="9">Sep</option>
-        <option value="10">Okt</option><option value="11">Nóv</option><option value="12">Des</option>
-      </select>
-    </label>
-    <label>Dagur: <input type="date" id="daySel"></label>
-    <button id="clearDay">Hreinsa dag</button>
-    <span class="sub" id="rangeSel" style="margin-left:6px"></span>
-  </div>
-
-  <input type="radio" id="p1" name="tab" checked>
-  <input type="radio" id="p2" name="tab">
-  <input type="radio" id="p3" name="tab">
-  <input type="radio" id="p4" name="tab">
-  <input type="radio" id="p5" name="tab">
-  <input type="radio" id="p6" name="tab">
-  <input type="radio" id="p7" name="tab">
-  <input type="radio" id="p8" name="tab">
-
-  <div class="tabs">
-    <label class="tab" for="p1">Yfirlit</label>
-    <label class="tab" for="p2">Vindur</label>
-    <label class="tab" for="p3">Hiti &amp; Raki</label>
-    <label class="tab" for="p4">Aðrar mælingar</label>
-    <label class="tab" for="p5">Línurit</label>
-    <label class="tab" for="p6">Dagur</label>
-    <label class="tab" for="p7">Mánaðir</label>
-    <label class="tab" for="p8">Mælaborð</label>
-  </div>
-
-  <div class="pages">
-    <div id="pg1" class="page"><div class="grid" id="overview"></div></div>
-    <div id="pg2" class="page"><div class="grid" id="wind"></div></div>
-    <div id="pg3" class="page"><div class="grid" id="temp"></div></div>
-    <div id="pg4" class="page"><div class="grid" id="extra"></div></div>
-    <div id="pg5" class="page">
-      <div class="grid">
-        <div class="card chart"><div class="k">Hiti (°C)</div><canvas id="cTemp"></canvas><div class="axis">X: tími • Y: °C</div></div>
-        <div class="card chart"><div class="k">Vindhraði (m/s)</div><canvas id="cWind"></canvas><div class="axis">X: tími • Y: m/s</div></div>
-        <div class="card chart"><div class="k">Rakastig (%)</div><canvas id="cHum"></canvas><div class="axis">X: tími • Y: %</div></div>
-        <div class="card chart"><div class="k">Loftþrýstingur (hPa)</div><canvas id="cPres"></canvas><div class="axis">X: tími • Y: hPa</div></div>
-      </div>
-      <div class="note" id="rangeNote"></div>
+        <div id="app">
+            <div class="loading">Sæki gögn...</div>
+        </div>
     </div>
-    <div id="pg6" class="page"><div id="dayWrap" class="empty">Veldu dag hér að ofan til að sjá tímalínu.</div></div>
-    <div id="pg7" class="page"><div id="monthWrap" class="empty">Veldu ár hér að ofan til að sjá mánaðarsamanburð.</div></div>
-    <div id="pg8" class="page"><div class="gauge-container" id="gaugeWrap"></div></div>
-  </div>
-</div>
 
-<script>
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRUcwYyuBJGhs-FjH19RdCEeGw_KNulQvK1VOXjDIPHaVDFmJ4lom0b6IIbvPIhCe6uV9qREXqGAkJE/pub?output=csv";
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script>
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRUcwYyuBJGhs-FjH19RdCEeGw_KNulQvK1VOXjDIPHaVDFmJ4lom0b6IIbvPIhCe6uV9qREXqGAkJE/pub?output=csv';
 
-function parseCSV(text){const rows=[];let cur=[],cell="",inQ=false;for(let i=0;i<text.length;i++){const ch=text[i],nx=text[i+1];if(inQ){if(ch=='"'&&nx=='"'){cell+='"';i++}else if(ch=='"'){inQ=false}else cell+=ch}else{if(ch=='"')inQ=true;else if(ch==','){cur.push(cell);cell=""}else if(ch=='\n'){cur.push(cell);rows.push(cur);cur=[];cell=""}else if(ch!='\r'){cell+=ch}}}if(cell.length||cur.length){cur.push(cell);rows.push(cur)}return rows.filter(r=>r.some(x=>(x||"").trim()!==""))}
-const norm=s=>(s||"").replace(/\u00A0/g," ").replace(/\s+/g," ").trim();
-function toNumSmart(v){if(v==null)return null;let s=String(v).trim().replace(/\s/g,"");if(s==="")return null;if((s.match(/,|\./g)||[]).length===1){const i=s.search(/[,.]/);if(i>=0&&s.length-i-1===3)s=s.replace(/[,.]/g,"")}else{const last=Math.max(s.lastIndexOf(','),s.lastIndexOf('.'));const dec=s[last];s=s.replace(/[,.]/g,c=>c===dec?'.':'')}s=s.replace(',', '.');const n=parseFloat(s);return isNaN(n)?null:n}
-function parseISDate(s){const t=norm(s).split(' '),dmy=t[0].split('/');if(dmy.length<3)return new Date(NaN);const[d,m,y]=dmy.map(x=>parseInt(x,10));const[H,Min]=(t[1]||"0:00").split(':').map(x=>parseInt(x,10));return new Date(y,m-1,d,H,Min,0)}
-function mean(a){const v=a.filter(x=>x!=null);return v.length? v.reduce((p,c)=>p+c,0)/v.length : null}
-function minA(a){const v=a.filter(x=>x!=null);return v.length? Math.min(...v) : null}
-function maxA(a){const v=a.filter(x=>x!=null);return v.length? Math.max(...v) : null}
-function circularMeanDeg(degs){const v=degs.filter(x=>x!=null);if(!v.length)return null;const r=v.map(d=>d*Math.PI/180),X=mean(r.map(c=>Math.cos(c))),Y=mean(r.map(s=>Math.sin(s)));let a=Math.atan2(Y,X)*180/Math.PI;if(a<0)a+=360;return a}
-function compass16(deg){if(deg==null)return "—";const d=["N","NNA","NA","ANA","A","ASA","SA","SSA","S","SSV","SV","VSV","V","VNV","NV","NNV","N"];return d[Math.round(deg/22.5)]}
-function beaufort(ms){const b=[0.3,1.6,3.4,5.5,8.0,10.8,13.9,17.2,20.8,24.5,28.5,32.7,1e9];const n=["Logn","Andvari","Kul","Gola","Stinningsgola","Kaldi","Stinningskaldi","Allhvass","Hvassviðri","Stormur","Rok","Ofsaveður","Fárviðri"];for(let i=0;i<b.length;i++)if(ms<b[i])return{idx:i,name:n[i]};return{idx:0,name:"—"}}
+        function getWindDirection(degrees) {
+            const directions = ['N', 'NA', 'A', 'SA', 'S', 'SV', 'V', 'NV'];
+            const index = Math.round(degrees / 45) % 8;
+            return directions[index];
+        }
 
-const ICONS={sun:`<svg viewBox="0 0 24 24" fill="#FDB813"><circle cx="12" cy="12" r="5"/><g stroke="#FDB813" stroke-width="2"><line x1="12" y1="1" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="1" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="23" y2="12"/><line x1="4.2" y1="4.2" x2="6.8" y2="6.8"/><line x1="17.2" y1="17.2" x2="19.8" y2="19.8"/><line x1="17.2" y1="6.8" x2="19.8" y2="4.2"/><line x1="4.2" y1="19.8" x2="6.8" y2="17.2"/></g></svg>`,
-cloud:`<svg viewBox="0 0 24 24"><path fill="#9EC3E6" d="M7 18h10a5 5 0 0 0 0-10 6 6 0 0 0-11-1A4 4 0 0 0 7 18z"/></svg>`,
-rain:`<svg viewBox="0 0 24 24"><path fill="#9EC3E6" d="M7 15h10a5 5 0 0 0 0-10 6 6 0 0 0-11-1A4 4 0 0 0 7 15z"/><g fill="#0ea5e9"><circle cx="8" cy="20" r="1.5"/><circle cx="12" cy="21" r="1.5"/><circle cx="16" cy="20" r="1.5"/></g></svg>`,
-snow:`<svg viewBox="0 0 24 24"><path fill="#9EC3E6" d="M7 15h10a5 5 0 0 0 0-10 6 6 0 0 0-11-1A4 4 0 0 0 7 15z"/><g fill="#BFE3FF"><circle cx="9" cy="20" r="1.3"/><circle cx="12" cy="21" r="1.3"/><circle cx="15" cy="20" r="1.3"/></g></svg>`,
-wind:`<svg viewBox="0 0 24 24"><path fill="#0ea5e9" d="M3 10h12a3 3 0 1 0-3-3"/><path fill="#0ea5e9" d="M3 16h10a3 3 0 1 1-3 3"/></svg>`};
-function inferCondPoint(t,wind,rr,solar){ if(rr&&rr>0) return "rain"; if(t<=0 && rr>0) return "snow"; if(wind>=17) return "wind"; if(solar!=null&&solar>400) return "sun"; if(solar!=null&&solar>100) return "cloud"; return "cloud"; }
+        function formatDate(dateStr) {
+            const parts = dateStr.split(' ');
+            const dateParts = parts[0].split('/');
+            const timeParts = parts[1].split(':');
+            
+            const date = new Date(
+                parseInt(dateParts[2]),
+                parseInt(dateParts[1]) - 1,
+                parseInt(dateParts[0]),
+                parseInt(timeParts[0]),
+                parseInt(timeParts[1]),
+                parseInt(timeParts[2])
+            );
+            
+            return date.toLocaleString('is-IS', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
 
-function fmtDateOnly(d){return d.toLocaleDateString("is-IS")}
-function fmtTime(d){return d.toLocaleTimeString("is-IS",{hour:"2-digit",minute:"2-digit"})}
+        function loadWeatherData() {
+            Papa.parse(CSV_URL, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    if (results.data && results.data.length > 0) {
+                        displayWeather(results.data[0]);
+                    } else {
+                        showError('Engin gögn fundust');
+                    }
+                },
+                error: function(error) {
+                    showError('Villa við að sækja gögn: ' + error.message);
+                }
+            });
+        }
 
-function createGauge(value, min, max, unit, label) {
-  const range = max - min;
-  const numVal = parseFloat(value);
-  const percentage = ((numVal - min) / range) * 100;
-  const angle = (percentage / 100) * 180 - 90;
-  const radAngle = angle * Math.PI / 180;
-  const endX = 100 + 80 * Math.cos(radAngle);
-  const endY = 100 + 80 * Math.sin(radAngle);
-  const largeArc = percentage > 50 ? 1 : 0;
-  
-  return `<div class="card gauge-wrap"><svg class="gauge-svg" viewBox="0 0 200 120"><path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#e5f1fb" stroke-width="20" stroke-linecap="round"/><path d="M 20 100 A 80 80 0 ${largeArc} 1 ${endX} ${endY}" fill="none" stroke="#0ea5e9" stroke-width="20" stroke-linecap="round"/><circle cx="100" cy="100" r="8" fill="#034078"/><text x="20" y="115" text-anchor="start" font-size="11" fill="#666">${min}</text><text x="180" y="115" text-anchor="end" font-size="11" fill="#666">${max}</text></svg><div class="gauge-val">${value}${unit}</div><div class="gauge-label">${label}</div></div>`;
-}
+        function displayWeather(data) {
+            const temp = parseFloat(data['Temperature (°C)']) || 0;
+            const humidity = parseFloat(data['Humidity (%)']) || 0;
+            const windSpeed = parseFloat(data['Average wind speed (m/s)']) || 0;
+            const windGust = parseFloat(data['Gust of wind (m/s)']) || 0;
+            const windDir = parseFloat(data['Average wind direction (°)']) || 0;
+            const pressure = parseFloat(data['Atmospheric pressure (hPa)'].replace(',', '')) || 0;
+            const rain = parseFloat(data['Rain (mm)']) || 0;
+            const dewPoint = parseFloat(data['Dew point (°C)']) || 0;
+            const windChill = parseFloat(data['Wind chill (°C)']) || temp;
 
-function analyzeDayWeather(dayData, lastYearData) {
-  if(!dayData.length) return "";
-  const temps = dayData.map(r => r.temp).filter(v => v != null);
-  const winds = dayData.map(r => r.wind).filter(v => v != null);
-  const rain = dayData.map(r => r.rain).filter(v => v != null);
-  const avgTemp = mean(temps);
-  const maxTemp = maxA(temps);
-  const minTemp = minA(temps);
-  const avgWind = mean(winds);
-  const maxWind = maxA(winds);
-  const totalRain = rain.length ? rain.reduce((a,b) => a+b, 0) : 0;
-  
-  let desc = "";
-  if(avgTemp < 0) desc = "Dagurinn var kaldur með hitastig undir frostmarki. ";
-  else if(avgTemp < 5) desc = "Dagurinn var svalur með lágu hitastigi. ";
-  else if(avgTemp < 15) desc = "Dagurinn var frekar kaldur með hóflegum hita. ";
-  else desc = "Dagurinn var hlýr. ";
-  
-  if(maxWind > 20) desc += "Þetta var hvasst með stormviðri. ";
-  else if(maxWind > 15) desc += "Það var nokkuð hvassviðri. ";
-  else if(avgWind > 10) desc += "Það var frekar hvasst. ";
-  else desc += "Vindurinn var hægur. ";
-  
-  if(totalRain > 10) desc += "Mikil úrkoma mældist þennan dag.";
-  else if(totalRain > 3) desc += "Nokkur úrkoma mældist.";
-  else if(totalRain > 0) desc += "Lítilsháttar úrkoma.";
-  else desc += "Enginn úrkomi mældist.";
-  
-  let comparison = "";
-  if(lastYearData && lastYearData.length) {
-    const lastYearAvg = mean(lastYearData.map(r => r.temp).filter(v => v != null));
-    if(lastYearAvg != null) {
-      const diff = avgTemp - lastYearAvg;
-      if(Math.abs(diff) < 1) comparison = `Svipað hitastig og í fyrra (${fmt(lastYearAvg)}°C).`;
-      else if(diff > 0) comparison = `${fmt(diff)}°C hlýrra en í fyrra (þá ${fmt(lastYearAvg)}°C).`;
-      else comparison = `${fmt(Math.abs(diff))}°C kaldara en í fyrra (þá ${fmt(lastYearAvg)}°C).`;
-    }
-  }
-  
-  return `<div class="day-summary"><h3>Samantekt dagsins</h3><p><strong>Hiti:</strong> Meðal ${fmt(avgTemp)}°C (lágmark ${fmt(minTemp)}°C, hámark ${fmt(maxTemp)}°C)</p><p><strong>Vindur:</strong> Meðal ${fmt(avgWind)} m/s (hæstur ${fmt(maxWind)} m/s)</p><p><strong>Úrkoma:</strong> ${fmt(totalRain,1)} mm samtals</p><p>${desc}</p>${comparison ? `<div class="comparison">📊 Samanburður við fyrra ár: ${comparison}</div>` : ''}</div>`;
-}
+            const html = `
+                <div class="timestamp">
+                    <div class="timestamp-label">Síðasta mæling</div>
+                    <div class="timestamp-value">${formatDate(data['Date (Atlantic/Reykjavik)'])}</div>
+                </div>
 
-function drawSeries(canvas, points, yUnit){
-  const ctx=canvas.getContext("2d"), W=canvas.width=canvas.clientWidth, H=canvas.height=canvas.clientHeight;
-  ctx.clearRect(0,0,W,H);
-  if(points.length<2){ ctx.fillStyle="#666"; ctx.fillText("Engin gögn.",10,18); return; }
-  const xs=points.map(p=>p.x), ys=points.map(p=>p.y);
-  const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys);
-  const pad=32; const sx=x=>pad+(x-minX)*(W-2*pad)/(maxX-minX||1); const sy=y=>H-pad-(y-minY)*(H-2*pad)/(maxY-minY||1);
-  ctx.strokeStyle="#e5f1fb"; ctx.lineWidth=1;
-  const yTicks=5; for(let i=0;i<=yTicks;i++){const y=minY+(i*(maxY-minY)/(yTicks||1)); const yy=sy(y); ctx.beginPath(); ctx.moveTo(pad,yy); ctx.lineTo(W-pad,yy); ctx.stroke(); ctx.fillStyle="#666"; ctx.font="11px Segoe UI"; ctx.fillText(y.toFixed(0),4,yy+3);}
-  ctx.strokeStyle="#cce4f6"; ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,H-pad); ctx.lineTo(W-pad,H-pad); ctx.stroke();
-  ctx.strokeStyle="#0ea5e9"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(sx(points[0].x), sy(points[0].y));
-  for(let i=1;i<points.length;i++) ctx.lineTo(sx(points[i].x), sy(points[i].y)); ctx.stroke();
-  ctx.fillStyle="#666"; ctx.font="11px Segoe UI";
-  ctx.fillText(new Date(minX).toLocaleString("is-IS",{hour:"2-digit",minute:"2-digit"}), pad, H-6);
-  ctx.fillText(new Date((minX+maxX)/2).toLocaleString("is-IS",{hour:"2-digit",minute:"2-digit"}), (W/2)-20, H-6);
-  ctx.fillText(new Date(maxX).toLocaleString("is-IS",{hour:"2-digit",minute:"2-digit"}), W-80, H-6);
-}
+                <div class="weather-grid">
+                    <div class="weather-card">
+                        <div class="card-title">Hitastig</div>
+                        <div class="card-value">${temp.toFixed(1)}<span class="card-unit">°C</span></div>
+                    </div>
 
-async function loadAll(){
-  const res=await fetch(CSV_URL); if(!res.ok) throw new Error("Sækir CSV tókst ekki");
-  const rows=parseCSV(await res.text()); const headers=rows[0].map(norm); const id=Object.fromEntries(headers.map((h,i)=>[h,i]));
-  const H={ts:"Date (Atlantic/Reykjavik)", temp:"Temperature (°C)", hum:"Humidity (%)",
-           wind:"Average wind speed (m/s)", gust:"Gust of wind (m/s)", windDir:"Average wind direction (°)",
-           press:"Atmospheric pressure (hPa)", rain:"Rain (mm)", rainRate:"Rain rate (mm/h)",
-           solar:"Solar radiation (W/m²)", uv:"UV index", chill:"Wind chill (°C)",
-           inTemp:"Inside temperature (°C)", inHum:"Inside humidity (%)", dew:"Dew point (°C)", heat:"Heat index (°C)"};
-  const data = rows.slice(1).map(r=>({
-    ts: parseISDate(r[id[H.ts]]||r[0]),
-    temp: toNumSmart(r[id[H.temp]]), hum: toNumSmart(r[id[H.hum]]),
-    wind: toNumSmart(r[id[H.wind]]), gust: toNumSmart(r[id[H.gust]]), windDir: toNumSmart(r[id[H.windDir]]),
-    press: toNumSmart(r[id[H.press]]), rain: toNumSmart(r[id[H.rain]]), rainRate: toNumSmart(r[id[H.rainRate]]),
-    solar: toNumSmart(r[id[H.solar]]), uv: toNumSmart(r[id[H.uv]]), chill: toNumSmart(r[id[H.chill]]),
-    inTemp: toNumSmart(r[id[H.inTemp]]), inHum: toNumSmart(r[id[H.inHum]]), dew: toNumSmart(r[id[H.dew]]), heat: toNumSmart(r[id[H.heat]])
-  })).filter(x=>x.ts instanceof Date && !isNaN(x.ts));
-  data.sort((a,b)=>a.ts-b.ts);
-  return data;
-}
+                    <div class="weather-card">
+                        <div class="card-title">Kuldatilfinnig</div>
+                        <div class="card-value">${windChill.toFixed(1)}<span class="card-unit">°C</span></div>
+                    </div>
 
-const card=(title,meanTxt,low,high,allLow,allAvg,allHigh,unit="")=>`<div class="card"><div class="k">${title}</div><div class="v">${meanTxt}${unit}</div><div class="statline">Lág ${low}${unit} • Há ${high}${unit}</div><div class="alltime"><span class="low">Allt – Lág ${allLow}${unit}</span> • <span class="avg">Meðal ${allAvg}${unit}</span> • <span class="high">Há ${allHigh}${unit}</span></div></div>`;
-const fmt=(x,dec=1)=>(x==null||isNaN(x))?"—":x.toFixed(dec);
+                    <div class="weather-card">
+                        <div class="card-title">Raki</div>
+                        <div class="card-value">${humidity.toFixed(0)}<span class="card-unit">%</span></div>
+                    </div>
 
-function filterRange(data,y,m,dayISO){
-  return data.filter(r=>{
-    const yOk = y? r.ts.getFullYear()===y : true;
-    const mOk = m? (r.ts.getMonth()+1)===m : true;
-    const dOk = dayISO? r.ts.toISOString().slice(0,10)===dayISO : true;
-    return yOk && mOk && dOk;
-  });
-}
+                    <div class="weather-card">
+                        <div class="card-title">Vindur</div>
+                        <div class="card-value">${windSpeed.toFixed(1)}<span class="card-unit">m/s</span></div>
+                        <div class="wind-direction">
+                            <div class="wind-arrow" style="transform: rotate(${windDir}deg)"></div>
+                        </div>
+                        <div style="text-align: center; color: #666; margin-top: 5px;">
+                            ${getWindDirection(windDir)} (${windDir.toFixed(0)}°)
+                        </div>
+                    </div>
 
-let ALL=[];
+                    <div class="weather-card">
+                        <div class="card-title">Vindkast</div>
+                        <div class="card-value">${windGust.toFixed(1)}<span class="card-unit">m/s</span></div>
+                    </div>
+
+                    <div class="weather-card">
+                        <div class="card-title">Loftþrýstingur</div>
+                        <div class="card-value">${pressure.toFixed(0)}<span class="card-unit">hPa</span></div>
+                    </div>
+
+                    <div class="weather-card">
+                        <div class="card-title">Úrkoma</div>
+                        <div class="card-value">${rain.toFixed(1)}<span class="card-unit">mm</span></div>
+                    </div>
+
+                    <div class="weather-card">
+                        <div class="card-title">Daggarmark</div>
+                        <div class="card-value">${dewPoint.toFixed(1)}<span class="card-unit">°C</span></div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('app').innerHTML = html;
+        }
+
+        function showError(message) {
+            document.getElementById('app').innerHTML = `
+                <div class="error">
+                    <h2>⚠️ Villa</h2>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        // Sækja gögn við upphaf
+        loadWeatherData();
+
+        // Uppfæra á 5 mínútna fresti
+        setInterval(loadWeatherData, 5 * 60 * 1000);
+    </script>
+</body>
+</html>
