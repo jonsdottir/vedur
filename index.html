@@ -13,58 +13,164 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 50%, #90caf9 100%);
             min-height: 100vh;
-            padding: 20px;
             color: #333;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
+            padding: 20px;
         }
 
         header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             text-align: center;
-            color: white;
-            margin-bottom: 30px;
         }
 
         h1 {
+            color: #1976d2;
             font-size: 2.5em;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .subtitle {
+            color: #666;
             font-size: 1.1em;
-            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            background: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            color: #1976d2;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #e3f2fd;
+            transform: translateY(-2px);
+        }
+
+        .tab.active {
+            background: #1976d2;
+            color: white;
+        }
+
+        .filters {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filter-group label {
+            display: block;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e3f2fd;
+            border-radius: 8px;
+            font-size: 1em;
+            color: #333;
+            background: white;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #1976d2;
+        }
+
+        .clear-btn {
+            background: #ff5252;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .clear-btn:hover {
+            background: #ff1744;
+            transform: translateY(-2px);
+        }
+
+        .content {
+            display: none;
+        }
+
+        .content.active {
+            display: block;
         }
 
         .loading {
             text-align: center;
-            color: white;
-            font-size: 1.2em;
             padding: 40px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: #1976d2;
+            font-size: 1.2em;
         }
 
         .weather-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .weather-card {
             background: white;
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transition: transform 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
         }
 
         .weather-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .card-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
         }
 
         .card-title {
@@ -76,35 +182,96 @@
         }
 
         .card-value {
-            font-size: 2.5em;
+            font-size: 2.2em;
             font-weight: bold;
-            color: #667eea;
-            margin-bottom: 5px;
+            color: #1976d2;
         }
 
         .card-unit {
-            font-size: 1.2em;
+            font-size: 0.6em;
             color: #999;
         }
 
-        .timestamp {
+        .day-header {
             background: white;
             border-radius: 15px;
             padding: 20px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
         }
 
-        .timestamp-label {
-            color: #666;
-            font-size: 0.9em;
-            margin-bottom: 5px;
+        .day-title {
+            color: #1976d2;
+            font-size: 2em;
+            font-weight: bold;
         }
 
-        .timestamp-value {
-            color: #667eea;
+        .data-table {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #1976d2;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e3f2fd;
+        }
+
+        tr:hover {
+            background: #e3f2fd;
+        }
+
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .month-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .month-card h3 {
+            color: #1976d2;
+            margin-bottom: 15px;
             font-size: 1.3em;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e3f2fd;
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            color: #1976d2;
             font-weight: bold;
         }
 
@@ -113,32 +280,48 @@
             border-radius: 15px;
             padding: 30px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            color: #e74c3c;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: #ff5252;
         }
 
-        .wind-direction {
-            width: 60px;
-            height: 60px;
-            margin: 10px auto;
-            position: relative;
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
         }
 
-        .wind-arrow {
-            width: 100%;
-            height: 100%;
-            background: #667eea;
-            clip-path: polygon(50% 0%, 70% 40%, 60% 40%, 60% 100%, 40% 100%, 40% 40%, 30% 40%);
-            transition: transform 0.5s ease;
+        .page-btn {
+            background: white;
+            border: 2px solid #1976d2;
+            color: #1976d2;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .page-btn:hover {
+            background: #1976d2;
+            color: white;
+        }
+
+        .page-btn.active {
+            background: #1976d2;
+            color: white;
         }
 
         @media (max-width: 768px) {
             h1 {
-                font-size: 2em;
+                font-size: 1.8em;
             }
             
-            .weather-grid {
-                grid-template-columns: 1fr;
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                width: 100%;
             }
         }
     </style>
@@ -146,11 +329,66 @@
 <body>
     <div class="container">
         <header>
-            <h1>⛅ Veðurstöð Prestsbakka</h1>
-            <p class="subtitle">Rauntíma veðurgögn</p>
+            <h1>🌤️ Veðurstöð Prestsbakka</h1>
+            <p class="subtitle">Veðurgögn og tölfræði</p>
         </header>
 
-        <div id="app">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('overview')">📊 Yfirlit</button>
+            <button class="tab" onclick="showTab('daily')">📅 Dagleg gögn</button>
+            <button class="tab" onclick="showTab('monthly')">📆 Mánaðarsamanburður</button>
+            <button class="tab" onclick="showTab('table')">📋 Tafla</button>
+        </div>
+
+        <div class="filters">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label>Ár</label>
+                    <select id="yearFilter" onchange="applyFilters()">
+                        <option value="">Öll ár</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Mánuður</label>
+                    <select id="monthFilter" onchange="applyFilters()">
+                        <option value="">Allir mánuðir</option>
+                        <option value="1">Janúar</option>
+                        <option value="2">Febrúar</option>
+                        <option value="3">Mars</option>
+                        <option value="4">Apríl</option>
+                        <option value="5">Maí</option>
+                        <option value="6">Júní</option>
+                        <option value="7">Júlí</option>
+                        <option value="8">Ágúst</option>
+                        <option value="9">September</option>
+                        <option value="10">Október</option>
+                        <option value="11">Nóvember</option>
+                        <option value="12">Desember</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Dagur</label>
+                    <input type="date" id="dateFilter" onchange="applyFilters()">
+                </div>
+                <div class="filter-group" style="display: flex; align-items: flex-end;">
+                    <button class="clear-btn" onclick="clearFilters()">🔄 Hreinsa síur</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="overview" class="content active">
+            <div class="loading">Sæki gögn...</div>
+        </div>
+
+        <div id="daily" class="content">
+            <div class="loading">Sæki gögn...</div>
+        </div>
+
+        <div id="monthly" class="content">
+            <div class="loading">Sæki gögn...</div>
+        </div>
+
+        <div id="table" class="content">
             <div class="loading">Sæki gögn...</div>
         </div>
     </div>
@@ -158,136 +396,366 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script>
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRUcwYyuBJGhs-FjH19RdCEeGw_KNulQvK1VOXjDIPHaVDFmJ4lom0b6IIbvPIhCe6uV9qREXqGAkJE/pub?output=csv';
+        
+        let allData = [];
+        let filteredData = [];
+        let currentTab = 'overview';
+        let currentDayPage = 0;
+        const DAYS_PER_PAGE = 1;
 
-        function getWindDirection(degrees) {
-            const directions = ['N', 'NA', 'A', 'SA', 'S', 'SV', 'V', 'NV'];
-            const index = Math.round(degrees / 45) % 8;
-            return directions[index];
+        function parseDate(dateStr) {
+            const parts = dateStr.split(' ')[0].split('/');
+            return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
         }
 
-        function formatDate(dateStr) {
-            const parts = dateStr.split(' ');
-            const dateParts = parts[0].split('/');
-            const timeParts = parts[1].split(':');
-            
-            const date = new Date(
-                parseInt(dateParts[2]),
-                parseInt(dateParts[1]) - 1,
-                parseInt(dateParts[0]),
-                parseInt(timeParts[0]),
-                parseInt(timeParts[1]),
-                parseInt(timeParts[2])
-            );
-            
-            return date.toLocaleString('is-IS', {
+        function formatDateIS(date) {
+            return date.toLocaleDateString('is-IS', {
                 year: 'numeric',
                 month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
+                day: 'numeric'
             });
         }
 
-        function loadWeatherData() {
+        function showTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab).classList.add('active');
+            
+            renderCurrentTab();
+        }
+
+        function loadData() {
             Papa.parse(CSV_URL, {
                 download: true,
                 header: true,
+                skipEmptyLines: true,
                 complete: function(results) {
-                    if (results.data && results.data.length > 0) {
-                        displayWeather(results.data[0]);
-                    } else {
-                        showError('Engin gögn fundust');
-                    }
+                    allData = results.data.filter(row => row['Date (Atlantic/Reykjavik)']);
+                    filteredData = [...allData];
+                    populateYearFilter();
+                    renderCurrentTab();
                 },
                 error: function(error) {
-                    showError('Villa við að sækja gögn: ' + error.message);
+                    document.getElementById('overview').innerHTML = 
+                        `<div class="error"><h2>⚠️ Villa</h2><p>Ekki tókst að sækja gögn: ${error.message}</p></div>`;
                 }
             });
         }
 
-        function displayWeather(data) {
-            const temp = parseFloat(data['Temperature (°C)']) || 0;
-            const humidity = parseFloat(data['Humidity (%)']) || 0;
-            const windSpeed = parseFloat(data['Average wind speed (m/s)']) || 0;
-            const windGust = parseFloat(data['Gust of wind (m/s)']) || 0;
-            const windDir = parseFloat(data['Average wind direction (°)']) || 0;
-            const pressure = parseFloat(data['Atmospheric pressure (hPa)'].replace(',', '')) || 0;
-            const rain = parseFloat(data['Rain (mm)']) || 0;
-            const dewPoint = parseFloat(data['Dew point (°C)']) || 0;
-            const windChill = parseFloat(data['Wind chill (°C)']) || temp;
+        function populateYearFilter() {
+            const years = [...new Set(allData.map(row => {
+                const date = parseDate(row['Date (Atlantic/Reykjavik)']);
+                return date.getFullYear();
+            }))].sort((a, b) => b - a);
+            
+            const yearSelect = document.getElementById('yearFilter');
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            });
+        }
 
-            const html = `
-                <div class="timestamp">
-                    <div class="timestamp-label">Síðasta mæling</div>
-                    <div class="timestamp-value">${formatDate(data['Date (Atlantic/Reykjavik)'])}</div>
+        function applyFilters() {
+            const year = document.getElementById('yearFilter').value;
+            const month = document.getElementById('monthFilter').value;
+            const dateInput = document.getElementById('dateFilter').value;
+            
+            filteredData = allData.filter(row => {
+                const date = parseDate(row['Date (Atlantic/Reykjavik)']);
+                
+                if (year && date.getFullYear() != year) return false;
+                if (month && (date.getMonth() + 1) != month) return false;
+                if (dateInput) {
+                    const filterDate = new Date(dateInput);
+                    if (date.toDateString() !== filterDate.toDateString()) return false;
+                }
+                
+                return true;
+            });
+            
+            currentDayPage = 0;
+            renderCurrentTab();
+        }
+
+        function clearFilters() {
+            document.getElementById('yearFilter').value = '';
+            document.getElementById('monthFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            filteredData = [...allData];
+            currentDayPage = 0;
+            renderCurrentTab();
+        }
+
+        function renderCurrentTab() {
+            switch(currentTab) {
+                case 'overview':
+                    renderOverview();
+                    break;
+                case 'daily':
+                    renderDaily();
+                    break;
+                case 'monthly':
+                    renderMonthly();
+                    break;
+                case 'table':
+                    renderTable();
+                    break;
+            }
+        }
+
+        function renderOverview() {
+            if (filteredData.length === 0) {
+                document.getElementById('overview').innerHTML = 
+                    '<div class="error"><h2>📭 Engin gögn</h2><p>Engin gögn fundust fyrir valdar síur</p></div>';
+                return;
+            }
+
+            const temps = filteredData.map(r => parseFloat(r['Temperature (°C)']) || 0);
+            const humidity = filteredData.map(r => parseFloat(r['Humidity (%)']) || 0);
+            const wind = filteredData.map(r => parseFloat(r['Average wind speed (m/s)']) || 0);
+            const rain = filteredData.map(r => parseFloat(r['Rain (mm)']) || 0);
+
+            const avgTemp = (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1);
+            const maxTemp = Math.max(...temps).toFixed(1);
+            const minTemp = Math.min(...temps).toFixed(1);
+            const avgHumidity = (humidity.reduce((a, b) => a + b, 0) / humidity.length).toFixed(0);
+            const avgWind = (wind.reduce((a, b) => a + b, 0) / wind.length).toFixed(1);
+            const maxWind = Math.max(...wind).toFixed(1);
+            const totalRain = rain.reduce((a, b) => a + b, 0).toFixed(1);
+
+            document.getElementById('overview').innerHTML = `
+                <div class="weather-grid">
+                    <div class="weather-card">
+                        <div class="card-icon">🌡️</div>
+                        <div class="card-title">Meðalhiti</div>
+                        <div class="card-value">${avgTemp}<span class="card-unit">°C</span></div>
+                    </div>
+                    <div class="weather-card">
+                        <div class="card-icon">🔥</div>
+                        <div class="card-title">Hámarkshiti</div>
+                        <div class="card-value">${maxTemp}<span class="card-unit">°C</span></div>
+                    </div>
+                    <div class="weather-card">
+                        <div class="card-icon">❄️</div>
+                        <div class="card-title">Lágmarkshiti</div>
+                        <div class="card-value">${minTemp}<span class="card-unit">°C</span></div>
+                    </div>
+                    <div class="weather-card">
+                        <div class="card-icon">💧</div>
+                        <div class="card-title">Meðalraki</div>
+                        <div class="card-value">${avgHumidity}<span class="card-unit">%</span></div>
+                    </div>
+                    <div class="weather-card">
+                        <div class="card-icon">💨</div>
+                        <div class="card-title">Meðalvindur</div>
+                        <div class="card-value">${avgWind}<span class="card-unit">m/s</span></div>
+                    </div>
+                    <div class="weather-card">
+                        <div class="card-icon">🌪️</div>
+                        <div class="card-title">Mestir vindur</div>
+                        <div class="card-value">${maxWind}<span class="card-unit">m/s</span></div>
+                    </div>
+                    <div class="weather-card">
+                        <div class="card-icon">🌧️</div>
+                        <div class="card-title">Heildarúrkoma</div>
+                        <div class="card-value">${totalRain}<span class="card-unit">mm</span></div>
+                    </div>
+                    <div class="weather-card">
+                        <div class="card-icon">📊</div>
+                        <div class="card-title">Fjöldi mælinga</div>
+                        <div class="card-value">${filteredData.length}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDaily() {
+            if (filteredData.length === 0) {
+                document.getElementById('daily').innerHTML = 
+                    '<div class="error"><h2>📭 Engin gögn</h2><p>Engin gögn fundust fyrir valdar síur</p></div>';
+                return;
+            }
+
+            const dayGroups = {};
+            filteredData.forEach(row => {
+                const date = parseDate(row['Date (Atlantic/Reykjavik)']);
+                const dateKey = date.toISOString().split('T')[0];
+                if (!dayGroups[dateKey]) dayGroups[dateKey] = [];
+                dayGroups[dateKey].push(row);
+            });
+
+            const days = Object.keys(dayGroups).sort().reverse();
+            const totalPages = days.length;
+            const currentDay = days[currentDayPage];
+            const dayData = dayGroups[currentDay];
+
+            const temps = dayData.map(r => parseFloat(r['Temperature (°C)']) || 0);
+            const humidity = dayData.map(r => parseFloat(r['Humidity (%)']) || 0);
+            const wind = dayData.map(r => parseFloat(r['Average wind speed (m/s)']) || 0);
+            const rain = dayData.map(r => parseFloat(r['Rain (mm)']) || 0);
+
+            const avgTemp = (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1);
+            const maxTemp = Math.max(...temps).toFixed(1);
+            const minTemp = Math.min(...temps).toFixed(1);
+            const avgHumidity = (humidity.reduce((a, b) => a + b, 0) / humidity.length).toFixed(0);
+            const avgWind = (wind.reduce((a, b) => a + b, 0) / wind.length).toFixed(1);
+            const totalRain = rain.reduce((a, b) => a + b, 0).toFixed(1);
+
+            const date = new Date(currentDay);
+            
+            document.getElementById('daily').innerHTML = `
+                <div class="day-header">
+                    <div class="day-title">${formatDateIS(date)}</div>
+                    <p style="color: #666; margin-top: 10px;">${dayData.length} mælingar þennan dag</p>
                 </div>
 
                 <div class="weather-grid">
                     <div class="weather-card">
-                        <div class="card-title">Hitastig</div>
-                        <div class="card-value">${temp.toFixed(1)}<span class="card-unit">°C</span></div>
+                        <div class="card-icon">🌡️</div>
+                        <div class="card-title">Meðalhiti</div>
+                        <div class="card-value">${avgTemp}<span class="card-unit">°C</span></div>
                     </div>
-
                     <div class="weather-card">
-                        <div class="card-title">Kuldatilfinnig</div>
-                        <div class="card-value">${windChill.toFixed(1)}<span class="card-unit">°C</span></div>
+                        <div class="card-icon">🔥</div>
+                        <div class="card-title">Hámarkshiti</div>
+                        <div class="card-value">${maxTemp}<span class="card-unit">°C</span></div>
                     </div>
-
                     <div class="weather-card">
-                        <div class="card-title">Raki</div>
-                        <div class="card-value">${humidity.toFixed(0)}<span class="card-unit">%</span></div>
+                        <div class="card-icon">❄️</div>
+                        <div class="card-title">Lágmarkshiti</div>
+                        <div class="card-value">${minTemp}<span class="card-unit">°C</span></div>
                     </div>
-
                     <div class="weather-card">
-                        <div class="card-title">Vindur</div>
-                        <div class="card-value">${windSpeed.toFixed(1)}<span class="card-unit">m/s</span></div>
-                        <div class="wind-direction">
-                            <div class="wind-arrow" style="transform: rotate(${windDir}deg)"></div>
-                        </div>
-                        <div style="text-align: center; color: #666; margin-top: 5px;">
-                            ${getWindDirection(windDir)} (${windDir.toFixed(0)}°)
-                        </div>
+                        <div class="card-icon">💧</div>
+                        <div class="card-title">Meðalraki</div>
+                        <div class="card-value">${avgHumidity}<span class="card-unit">%</span></div>
                     </div>
-
                     <div class="weather-card">
-                        <div class="card-title">Vindkast</div>
-                        <div class="card-value">${windGust.toFixed(1)}<span class="card-unit">m/s</span></div>
+                        <div class="card-icon">💨</div>
+                        <div class="card-title">Meðalvindur</div>
+                        <div class="card-value">${avgWind}<span class="card-unit">m/s</span></div>
                     </div>
-
                     <div class="weather-card">
-                        <div class="card-title">Loftþrýstingur</div>
-                        <div class="card-value">${pressure.toFixed(0)}<span class="card-unit">hPa</span></div>
-                    </div>
-
-                    <div class="weather-card">
+                        <div class="card-icon">🌧️</div>
                         <div class="card-title">Úrkoma</div>
-                        <div class="card-value">${rain.toFixed(1)}<span class="card-unit">mm</span></div>
-                    </div>
-
-                    <div class="weather-card">
-                        <div class="card-title">Daggarmark</div>
-                        <div class="card-value">${dewPoint.toFixed(1)}<span class="card-unit">°C</span></div>
+                        <div class="card-value">${totalRain}<span class="card-unit">mm</span></div>
                     </div>
                 </div>
-            `;
 
-            document.getElementById('app').innerHTML = html;
-        }
-
-        function showError(message) {
-            document.getElementById('app').innerHTML = `
-                <div class="error">
-                    <h2>⚠️ Villa</h2>
-                    <p>${message}</p>
+                <div class="pagination">
+                    <button class="page-btn" onclick="changeDayPage(-1)" ${currentDayPage === 0 ? 'disabled' : ''}>← Fyrri dagur</button>
+                    <span style="align-self: center; color: white; font-weight: bold;">Dagur ${currentDayPage + 1} af ${totalPages}</span>
+                    <button class="page-btn" onclick="changeDayPage(1)" ${currentDayPage === totalPages - 1 ? 'disabled' : ''}>Næsti dagur →</button>
                 </div>
             `;
         }
 
-        // Sækja gögn við upphaf
-        loadWeatherData();
+        function changeDayPage(direction) {
+            const dayGroups = {};
+            filteredData.forEach(row => {
+                const date = parseDate(row['Date (Atlantic/Reykjavik)']);
+                const dateKey = date.toISOString().split('T')[0];
+                if (!dayGroups[dateKey]) dayGroups[dateKey] = [];
+                dayGroups[dateKey].push(row);
+            });
+            const days = Object.keys(dayGroups).sort().reverse();
+            
+            currentDayPage += direction;
+            currentDayPage = Math.max(0, Math.min(currentDayPage, days.length - 1));
+            renderDaily();
+        }
 
-        // Uppfæra á 5 mínútna fresti
-        setInterval(loadWeatherData, 5 * 60 * 1000);
-    </script>
-</body>
-</html>
+        function renderMonthly() {
+            if (filteredData.length === 0) {
+                document.getElementById('monthly').innerHTML = 
+                    '<div class="error"><h2>📭 Engin gögn</h2><p>Engin gögn fundust fyrir valdar síur</p></div>';
+                return;
+            }
+
+            const monthGroups = {};
+            filteredData.forEach(row => {
+                const date = parseDate(row['Date (Atlantic/Reykjavik)']);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                if (!monthGroups[monthKey]) monthGroups[monthKey] = [];
+                monthGroups[monthKey].push(row);
+            });
+
+            const monthNames = ['Janúar', 'Febrúar', 'Mars', 'Apríl', 'Maí', 'Júní', 
+                              'Júlí', 'Ágúst', 'September', 'Október', 'Nóvember', 'Desember'];
+
+            let html = '<div class="month-grid">';
+            
+            Object.keys(monthGroups).sort().reverse().forEach(monthKey => {
+                const [year, month] = monthKey.split('-');
+                const monthData = monthGroups[monthKey];
+                
+                const temps = monthData.map(r => parseFloat(r['Temperature (°C)']) || 0);
+                const rain = monthData.map(r => parseFloat(r['Rain (mm)']) || 0);
+                const wind = monthData.map(r => parseFloat(r['Average wind speed (m/s)']) || 0);
+                
+                const avgTemp = (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1);
+                const maxTemp = Math.max(...temps).toFixed(1);
+                const minTemp = Math.min(...temps).toFixed(1);
+                const totalRain = rain.reduce((a, b) => a + b, 0).toFixed(1);
+                const avgWind = (wind.reduce((a, b) => a + b, 0) / wind.length).toFixed(1);
+                
+                html += `
+                    <div class="month-card">
+                        <h3>📅 ${monthNames[parseInt(month) - 1]} ${year}</h3>
+                        <div class="stat-row">
+                            <span class="stat-label">Meðalhiti</span>
+                            <span class="stat-value">${avgTemp}°C</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Hámarkshiti</span>
+                            <span class="stat-value">${maxTemp}°C</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Lágmarkshiti</span>
+                            <span class="stat-value">${minTemp}°C</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Heildarúrkoma</span>
+                            <span class="stat-value">${totalRain} mm</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Meðalvindur</span>
+                            <span class="stat-value">${avgWind} m/s</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Fjöldi mælinga</span>
+                            <span class="stat-value">${monthData.length}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            document.getElementById('monthly').innerHTML = html;
+        }
+
+        function renderTable() {
+            if (filteredData.length === 0) {
+                document.getElementById('table').innerHTML = 
+                    '<div class="error"><h2>📭 Engin gögn</h2><p>Engin gögn fundust fyrir valdar síur</p></div>';
+                return;
+            }
+
+            let html = `
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Dagsetning</th>
+                                <th>Hitastig (°C)</th>
+                                <th>Raki (%)</th>
+                                <th>Vindur (m/s)</th>
+                                <th>Vindkast (m/s)</th>
+                                <th>Loftþrýstingur (hPa)</th>
+                                <th>Úrkoma (mm)</th>
+                            </tr>
